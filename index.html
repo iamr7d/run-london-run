@@ -1495,26 +1495,29 @@
         // Initial Time Set (Moved to end)
 
         startBtn.addEventListener("click", () => {
-          // Add game-active class for rotation prompt
-          document.body.classList.add("game-active");
-          
-          // Show system registry
-          systemRegistry.style.display = 'block';
-          
-          if (isMobile) {
-            uiLayer.classList.add("hidden");
-            // Show mobile controls when game starts
-            const mobileUI = document.getElementById("mobile-controls");
-            if (mobileUI) mobileUI.style.display = "block";
-            if (!gameStarted) {
-              gameStarted = true;
-              const randomDelay = Math.random() * (8000 - 3000) + 3000;
-              setTimeout(triggerSnatch, randomDelay);
+          // Defer heavy operations to next frame for better responsiveness
+          requestAnimationFrame(() => {
+            // Add game-active class for rotation prompt
+            document.body.classList.add("game-active");
+            
+            // Show system registry
+            systemRegistry.style.display = 'block';
+            
+            if (isMobile) {
+              uiLayer.classList.add("hidden");
+              // Show mobile controls when game starts
+              const mobileUI = document.getElementById("mobile-controls");
+              if (mobileUI) mobileUI.style.display = "block";
+              if (!gameStarted) {
+                gameStarted = true;
+                const randomDelay = Math.random() * (8000 - 3000) + 3000;
+                setTimeout(triggerSnatch, randomDelay);
+              }
+            } else {
+              controls.lock();
             }
-          } else {
-            controls.lock();
-          }
-          if (titleGroup) titleGroup.visible = false; // Hide title on start
+            if (titleGroup) titleGroup.visible = false; // Hide title on start
+          });
         });
 
         controls.addEventListener("lock", () => {
