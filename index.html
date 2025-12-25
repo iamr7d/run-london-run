@@ -872,7 +872,7 @@
           </div>
           <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff; text-align: center; opacity: 0; transition: opacity 1s ease;">
             0%
-            <div id="loading-subtext" style="font-size: 1rem; color: #999; margin-top: 20px; letter-spacing: 1px; min-height: 20px; font-family: 'Helvetica Neue', sans-serif; opacity: 0; transition: opacity 0.5s ease; text-align: center;"></div>
+            <div id="loading-subtext" style="font-size: 1rem; color: #999; margin-top: 25px; letter-spacing: 1px; min-height: 30px; line-height: 1.6; font-family: 'Helvetica Neue', sans-serif; opacity: 0; transition: opacity 0.5s ease; text-align: center;"></div>
           </div>
       </div>
 
@@ -1539,25 +1539,42 @@
         const audioLoader = new THREE.AudioLoader();
         
         // Load background ambience
-        audioLoader.load('city-street-downtown-52115.mp3', function(buffer) {
-            sound.setBuffer(buffer);
-            sound.setLoop(true);
-            sound.setVolume(0.6);
-            if(gameStarted && !sound.isPlaying) sound.play();
-        });
+        audioLoader.load(
+            'city-street-downtown-52115.mp3', 
+            function(buffer) {
+                sound.setBuffer(buffer);
+                sound.setLoop(true);
+                sound.setVolume(0.6);
+                if(gameStarted && !sound.isPlaying) sound.play();
+            },
+            undefined,
+            function(error) {
+                console.warn('Background audio failed to load:', error);
+            }
+        );
 
         // Load Footsteps
-        audioLoader.load('footsteps-on-pebbles-stones-on-the-road-rough-stones-109236.mp3', buffer => {
-            walkSound.setBuffer(buffer);
-            walkSound.setLoop(true);
-            walkSound.setVolume(0.4);
-        });
+        audioLoader.load(
+            'footsteps-on-pebbles-stones-on-the-road-rough-stones-109236.mp3', 
+            buffer => {
+                walkSound.setBuffer(buffer);
+                walkSound.setLoop(true);
+                walkSound.setVolume(0.4);
+            },
+            undefined,
+            error => console.warn('Walk sound failed to load:', error)
+        );
 
-        audioLoader.load('running-on-dirt-road-345729.mp3', buffer => {
-            runSound.setBuffer(buffer);
-            runSound.setLoop(true);
-            runSound.setVolume(0.5);
-        });
+        audioLoader.load(
+            'running-on-dirt-road-345729.mp3', 
+            buffer => {
+                runSound.setBuffer(buffer);
+                runSound.setLoop(true);
+                runSound.setVolume(0.5);
+            },
+            undefined,
+            error => console.warn('Run sound failed to load:', error)
+        );
 
         // Play audio on Start Button Click
         const audioStartBtn = document.getElementById("start-btn");
