@@ -98,30 +98,6 @@
         font-family: "Inter", sans-serif;
       }
 
-      /* System Registry Panel */
-      #system-registry {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        max-width: 200px;
-        max-height: 150px;
-        overflow-y: auto;
-        background: rgba(10, 10, 15, 0.3);
-        padding: 10px;
-        display: none;
-        z-index: 5;
-        font-family: 'Courier New', monospace;
-        font-size: 0.65rem;
-        color: #555;
-        line-height: 1.4;
-        border: 1px solid rgba(80, 80, 80, 0.2);
-      }
-      #system-registry .registry-id {
-        color: #666;
-        letter-spacing: 0.5px;
-        margin: 2px 0;
-      }
-
       /* Minimalist HUD */
       #stamina-container {
         position: fixed;
@@ -916,9 +892,6 @@
       <div class="hud-value" id="dist-val" style="color: #ff4444">0m</div>
     </div>
 
-    <!-- System Registry Panel -->
-    <div id="system-registry"></div>
-
     <!-- End Screen (Professional Card) -->
     <div id="end-screen">
       <div id="end-card-container" style="transition: opacity 2s ease;">
@@ -1341,64 +1314,6 @@
       let waterMesh;
       let moonMesh; // Moved to global/top scope to avoid TDZ errors
 
-      // System Registry for Case IDs
-      const registeredCases = new Set();
-      const systemRegistry = document.getElementById('system-registry');
-
-      function generateCaseID() {
-        // Format: [A-Z]{1-2}[0-9]{4-6}
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const letterCount = Math.random() < 0.5 ? 1 : 2;
-        const digitCount = Math.floor(Math.random() * 3) + 4; // 4-6 digits
-        
-        let id = '';
-        for (let i = 0; i < letterCount; i++) {
-          id += letters[Math.floor(Math.random() * letters.length)];
-        }
-        for (let i = 0; i < digitCount; i++) {
-          id += Math.floor(Math.random() * 10);
-        }
-        return id;
-      }
-
-      function registerCase(caseID) {
-        if (registeredCases.has(caseID)) return;
-        registeredCases.add(caseID);
-        
-        const entry = document.createElement('div');
-        entry.className = 'registry-id';
-        entry.textContent = caseID;
-        systemRegistry.appendChild(entry);
-        
-        // Auto-scroll to bottom
-        systemRegistry.scrollTop = systemRegistry.scrollHeight;
-      }
-
-      // Create text sprite for case IDs
-      function createTextSprite(text) {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = 256;
-        canvas.height = 64;
-        
-        // Style
-        context.fillStyle = 'rgba(0, 0, 0, 0)'; // Transparent background
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        
-        context.font = '24px "Courier New", monospace';
-        context.fillStyle = '#666'; // Low contrast grey
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-        context.fillText(text, canvas.width / 2, canvas.height / 2);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-        const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(1.5, 0.4, 1); // Adjust size
-        
-        return sprite;
-      }
-
       // --- 3D TITLE ---
       let titleGroup;
 
@@ -1563,9 +1478,6 @@
           requestAnimationFrame(() => {
             // Add game-active class for rotation prompt
             document.body.classList.add("game-active");
-            
-            // Show system registry
-            systemRegistry.style.display = 'block';
             
             if (isMobile) {
               uiLayer.classList.add("hidden");
@@ -3523,16 +3435,13 @@
               npc.position.set(npcX, 0, npcZ);
               npc.rotation.y = Math.random() * Math.PI * 2;
               scene.add(npc);
-              const caseID = generateCaseID();
               
               people.push({
                   group: npc,
                   speed: 0, // Stationery NPCs
                   dir: 1,
-                  side: 1,
-                  caseID: caseID
+                  side: 1
               });
-              registerCase(caseID);
           }
       }
 
@@ -3734,16 +3643,13 @@
 
           const speed = 0.05 + Math.random() * 0.05;
           const direction = Math.random() > 0.5 ? 1 : -1;
-          const caseID = generateCaseID();
           
           people.push({
             group: person,
             speed: speed,
             dir: direction,
-            side: side,
-            caseID: caseID
+            side: side
           });
-          registerCase(caseID);
           scene.add(person);
         }
       }
