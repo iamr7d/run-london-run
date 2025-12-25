@@ -1569,9 +1569,8 @@
                 sound.setBuffer(buffer);
                 sound.setLoop(true);
                 sound.setVolume(0.6);
-                if (!sound.isPlaying) {
-                    sound.play(); // Play immediately if possible
-                }
+                // Safe play attempt
+                sound.play().catch(e => console.log("Audio autoplay prevented"));
             },
             undefined,
             function(error) {
@@ -2261,7 +2260,7 @@
 
         // Foliage - Pink Particles
         const leavesGeo = new THREE.BufferGeometry();
-        const leafCount = 800;
+        const leafCount = 200; // Reduced from 800 for performance
         const positions = [];
         const colors = [];
         const color1 = new THREE.Color(0xffb7c5); // Light Pink
@@ -3872,7 +3871,7 @@
         const colors = [0xff00ff, 0x00ffff, 0x00ff00, 0xffaa00];
         const geo = new THREE.BoxGeometry(2, 8, 0.5);
 
-        for (let i = 0; i < 300; i++) {
+        for (let i = 0; i < 120; i++) {
           // Increased count for larger city
           const color = colors[Math.floor(Math.random() * colors.length)];
           const mat = new THREE.MeshBasicMaterial({ color: color });
@@ -3934,7 +3933,7 @@
       }
 
       function createDaffodils() {
-        const count = 3000;
+        const count = 800; // Reduced from 3000 for performance
         const dummy = new THREE.Object3D();
 
         // 1. Stems Instanced Mesh
@@ -3956,7 +3955,7 @@
         let index = 0;
 
         // Scatter along the river banks
-        for (let i = 0; i < 3000; i++) {
+        for (let i = 0; i < 800; i++) {
           const x = (Math.random() - 0.5) * 800;
           // Keep away from center (River is approx width 100)
           if (Math.abs(x) < 60) continue;
