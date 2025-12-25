@@ -292,17 +292,16 @@
       /* --- IN-GAME ALERTS --- */
       #phone-overlay {
         position: absolute;
-        bottom: -40px;
-        right: 40px; /* Moves to corner */
+        bottom: -450px; /* Completely hidden off-screen */
+        right: 40px;
         width: 250px;
         height: 400px;
         background: #111;
         border: 4px solid #333;
         border-radius: 30px;
         z-index: 5;
-        /* transform: rotate(-10deg); REMOVED FOR FLAT AESTHETIC */
         transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        display: flex;
+        display: none; /* Hidden initially */
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -1709,9 +1708,16 @@
           }, 2000);
 
           // UI Changes
-          document.getElementById("phone-overlay").style.transform =
-            "translate(500px, -200px)"; /* Removed rotate(45deg) */
-          document.getElementById("phone-overlay").style.opacity = "0";
+          const phoneOverlay = document.getElementById("phone-overlay");
+          phoneOverlay.style.display = "flex"; // Show phone
+          phoneOverlay.style.bottom = "-40px"; // Slide into view
+          phoneOverlay.style.opacity = "1";
+          
+          // Then animate it away
+          setTimeout(() => {
+            phoneOverlay.style.transform = "translate(500px, -200px)";
+            phoneOverlay.style.opacity = "0";
+          }, 100);
 
           const alert = document.getElementById("alert-msg");
           alert.style.display = "block";
