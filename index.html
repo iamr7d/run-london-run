@@ -719,10 +719,62 @@
         50% { transform: rotate(90deg); }
       }
       
+      
       /* Show rotation prompt only on mobile/tablet in portrait */
       @media (max-width: 1024px) and (orientation: portrait) {
         #rotation-prompt {
           display: flex !important;
+        }
+      }
+
+      /* --- EXTRA SMALL PHONES (< 480px) --- */
+      @media (max-width: 480px) {
+        /* Narrative Text - Even Smaller for Phones */
+        .narrative-text {
+          font-size: 0.7rem !important;
+          line-height: 1.4 !important;
+          padding: 0 15px !important;
+        }
+        
+        /* Case Status UI */
+        #case-status-ui .case-status-value {
+          font-size: 1.5rem !important;
+        }
+        #case-status-ui .case-status-label {
+          font-size: 0.55rem !important;
+        }
+        
+        /* Story Form */
+        .story-form {
+          padding: 20px !important;
+        }
+        .story-form h1 {
+          font-size: 1rem !important;
+        }
+        .story-form p {
+          font-size: 0.6rem !important;
+        }
+        .story-form label {
+          font-size: 0.65rem !important;
+        }
+        .story-form textarea {
+          font-size: 0.75rem !important;
+          height: 130px !important;
+        }
+        .share-btn {
+          font-size: 0.7rem !important;
+          padding: 8px 20px !important;
+        }
+        
+        /* Loading Screen */
+        #intro-disclaimer {
+          font-size: 0.7rem !important;
+        }
+        #loading-text {
+          font-size: 1rem !important;
+        }
+        #loading-subtext {
+          font-size: 0.55rem !important;
         }
       }
     </style>
