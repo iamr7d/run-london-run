@@ -1145,7 +1145,7 @@
         if (!isMobile) return;
 
         const mobileUI = document.getElementById("mobile-controls");
-        mobileUI.style.display = "block";
+        // Don't show immediately - will be shown when game starts
 
         const joystickContainer = document.getElementById("joystick-container");
         const joystickInner = document.getElementById("joystick-inner");
@@ -1408,6 +1408,9 @@
         startBtn.addEventListener("click", () => {
           if (isMobile) {
             uiLayer.classList.add("hidden");
+            // Show mobile controls when game starts
+            const mobileUI = document.getElementById("mobile-controls");
+            if (mobileUI) mobileUI.style.display = "block";
             if (!gameStarted) {
               gameStarted = true;
               const randomDelay = Math.random() * (8000 - 3000) + 3000;
