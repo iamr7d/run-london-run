@@ -671,8 +671,9 @@
     <div id="ui-layer">
       <!-- Simple Percent Loader -->
       <div id="loading-screen" style="justify-content: center; align-items: center; background: #000;">
-          <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff;">
+          <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff; text-align: center;">
             0%
+            <div style="font-size: 0.7rem; color: #666; margin-top: 15px; letter-spacing: 1px;">[ W A S D ] TO MOVE</div>
           </div>
       </div>
 
@@ -1307,6 +1308,28 @@
 
         document.addEventListener("keydown", onKeyDown);
         document.addEventListener("keyup", onKeyUp);
+
+        // --- AUDIO SETUP ---
+        const listener = new THREE.AudioListener();
+        camera.add(listener);
+
+        const sound = new THREE.Audio(listener);
+        const audioLoader = new THREE.AudioLoader();
+        
+        // Load sound globally but play on user interaction
+        audioLoader.load('city-street-downtown-52115.mp3', function(buffer) {
+            sound.setBuffer(buffer);
+            sound.setLoop(true);
+            sound.setVolume(0.5);
+        });
+
+        // Play audio on Start Button Click
+        const audioStartBtn = document.getElementById("start-btn");
+        if(audioStartBtn) {
+            audioStartBtn.addEventListener("click", () => {
+                if(sound && !sound.isPlaying) sound.play();
+            });
+        }
 
         // 6. Build World
         createSky(); // MOVED UP: Must be first for Sun reference
