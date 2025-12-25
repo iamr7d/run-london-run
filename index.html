@@ -501,9 +501,9 @@
         opacity: 0;
         transition: opacity 2s ease;
         position: absolute;
-        top: 20vh; /* Fixed vertical position */
+        top: 50%; /* Vertical Center */
         left: 50%;
-        transform: translateX(-50%);
+        transform: translate(-50%, -50%);
         width: 100%;
         text-align: center;
       }
@@ -520,9 +520,9 @@
         opacity: 0;
         transition: opacity 2s ease;
         position: absolute;
-        top: 20vh; /* Match narrative text */
+        top: 50%; /* Vertical Center */
         left: 50%;
-        transform: translateX(-50%);
+        transform: translate(-50%, -50%);
       }
       #chart-slide h2 {
         font-family: 'Helvetica Neue', Helvetica, sans-serif;
@@ -615,53 +615,75 @@
 
       /* --- MOBILE RESPONSIVENESS --- */
       @media (max-width: 768px) {
-        /* Adjust End Screen / Narrative */
-        .end-card {
-           padding: 30px 20px;
-           width: 95%;
-           max-width: 95%;
-        }
-        #end-title {
-           font-size: 2rem; /* Smaller title */
+        /* Narrative Text - Significantly Reduced */
+        .narrative-text {
+          font-size: 0.85rem !important;
+          line-height: 1.5 !important;
+          padding: 0 20px !important;
+          max-width: 90% !important;
+          top: 45% !important;
         }
         
         /* Case Status UI */
-        #case-status-ui h1 {
-           font-size: 2.5rem !important; /* "NO FURTHER ACTION" fits nicely */
-           line-height: 1.1;
+        #case-status-ui {
+          padding: 20px !important;
         }
-        #case-status-ui p {
-           font-size: 0.9rem !important;
+        #case-status-ui .case-status-value {
+          font-size: 1.8rem !important;
+          margin-bottom: 8px !important;
         }
-
-        /* Slides */
-        #chart-slide, #story-slide {
-           width: 90%;
-           padding: 0 5%;
+        #case-status-ui .case-status-label {
+          font-size: 0.65rem !important;
         }
         
-        /* Chart */
-        canvas#theft-chart {
-           max-height: 300px !important; /* Shorter for mobile */
-           margin-top: 10px;
+        /* Story Form */
+        .story-form {
+          max-width: 90% !important;
+          padding: 25px !important;
         }
-        
-        /* Form */
         .story-form h1 {
-           font-size: 1.8rem;
+          font-size: 1.2rem !important;
+          margin-bottom: 10px !important;
         }
         .story-form p {
-           font-size: 0.95rem;
-           margin-bottom: 20px;
+          font-size: 0.7rem !important;
+          line-height: 1.4 !important;
+          margin-bottom: 15px !important;
+        }
+        .story-form label {
+          font-size: 0.75rem !important;
+          margin-bottom: 6px !important;
         }
         .story-form textarea {
-           height: 120px;
+          font-size: 0.85rem !important;
+          height: 150px !important;
+          padding: 12px !important;
+        }
+        .share-btn {
+          font-size: 0.8rem !important;
+          padding: 10px 24px !important;
+        }
+        .exit-link {
+          font-size: 0.6rem !important;
         }
         
-        /* Buttons */
+        /* Loading Screen */
+        #intro-disclaimer {
+          font-size: 0.8rem !important;
+          padding: 0 20px !important;
+        }
+        #loading-text {
+          font-size: 1.2rem !important;
+        }
+        #loading-subtext {
+          font-size: 0.65rem !important;
+          margin-top: 15px !important;
+        }
+        
+        /* Start Button */
         .btn {
-           padding: 14px 30px;
-           font-size: 0.9rem;
+          padding: 12px 28px !important;
+          font-size: 0.85rem !important;
         }
       }
     </style>
@@ -676,7 +698,7 @@
           </div>
           <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff; text-align: center; opacity: 0; transition: opacity 1s ease;">
             0%
-            <div id="loading-subtext" style="font-size: 0.8rem; color: #666; margin-top: 20px; letter-spacing: 1px; min-height: 20px; font-family: 'Helvetica Neue', sans-serif;"></div>
+            <div id="loading-subtext" style="font-size: 0.8rem; color: #666; margin-top: 20px; letter-spacing: 1px; min-height: 20px; font-family: 'Helvetica Neue', sans-serif; opacity: 0; transition: opacity 0.5s ease;"></div>
           </div>
       </div>
 
@@ -882,6 +904,7 @@
       let moveRight = false;
       let canJump = false;
       let isSprinting = false;
+      let walkSound, runSound; // New global audio objects
 
       let prevTime = performance.now();
       const velocity = new THREE.Vector3();
@@ -1317,20 +1340,39 @@
         camera.add(listener);
 
         const sound = new THREE.Audio(listener);
+        walkSound = new THREE.Audio(listener); // Global walkSound
+        runSound = new THREE.Audio(listener);  // Global runSound
         const audioLoader = new THREE.AudioLoader();
         
-        // Load sound globally but play on user interaction
+        // Load background ambience
         audioLoader.load('city-street-downtown-52115.mp3', function(buffer) {
             sound.setBuffer(buffer);
             sound.setLoop(true);
-            sound.setVolume(0.5);
+            sound.setVolume(0.6);
+            if(gameStarted && !sound.isPlaying) sound.play();
+        });
+
+        // Load Footsteps
+        audioLoader.load('footsteps-on-pebbles-stones-on-the-road-rough-stones-109236.mp3', buffer => {
+            walkSound.setBuffer(buffer);
+            walkSound.setLoop(true);
+            walkSound.setVolume(0.4);
+        });
+
+        audioLoader.load('running-on-dirt-road-345729.mp3', buffer => {
+            runSound.setBuffer(buffer);
+            runSound.setLoop(true);
+            runSound.setVolume(0.5);
         });
 
         // Play audio on Start Button Click
         const audioStartBtn = document.getElementById("start-btn");
         if(audioStartBtn) {
             audioStartBtn.addEventListener("click", () => {
-                if(sound && !sound.isPlaying) sound.play();
+                if (listener.context.state === 'suspended') {
+                    listener.context.resume();
+                }
+                if(sound.buffer && !sound.isPlaying) sound.play();
             });
         }
 
@@ -1369,7 +1411,6 @@
         // Sequence Data
         const sequence = [
             "This is an interactive protest.",
-            "This is a short experience.",
             "You will walk through the city.",
             "Use W A S D to move.",
             "Mouse to look around.",
@@ -1390,31 +1431,28 @@
                     loadingText.style.opacity = '1';
                     
                     let progress = 0;
-                    let seqIndex = 0;
                     
                     // Progress Loop
                     const interval = setInterval(() => {
-                        progress += 0.5; // Slow down to allow reading time
+                        progress += 4; // DRAMATICALLY FASTER
                         if (progress > 100) progress = 100;
                         
-                        // Update Percentage (Just the number)
+                        // Update Percentage
                         loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
 
-                        // Update Subtext based on progress chunks
-                        // We have 7 items. 100 / 7 = approx 14% per item.
-                        const index = Math.min(sequence.length - 1, Math.floor(progress / 14));
+                        // Update Subtext (6 items now)
+                        const index = Math.min(sequence.length - 1, Math.floor(progress / 17.5));
                         if(subtext.innerText !== sequence[index]) {
                              subtext.style.opacity = 0;
                              setTimeout(() => {
                                  subtext.innerText = sequence[index];
                                  subtext.style.opacity = 1;
-                             }, 200);
+                             }, 150);
                         }
 
                         if (progress === 100) {
                             clearInterval(interval);
                             
-                            // Final Wait then Reveal Start
                             setTimeout(() => {
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
@@ -1422,14 +1460,13 @@
                                     btn.style.display = 'block';
                                     void btn.offsetWidth;
                                     btn.style.opacity = '1';
-                                }, 500);
-                            }, 1000);
+                                }, 200);
+                            }, 300);
                         }
-                    }, 50); // Tick every 50ms = 50 * 200 = 10s total load time approx
-                    
-                }, 2000); // Wait for disclaimer fade out
-            }, 3000); // Display disclaimer for 3s
-        }, 500);
+                    }, 30); // Faster interval
+                }, 400); // Super short wait
+            }, 600); // Shorter disclaimer display
+        }, 300); // Immediate start
       }
 
       function onKeyDown(event) {
@@ -3658,6 +3695,20 @@
             velocity.y = 0;
             camera.position.y = 1.6;
             canJump = true;
+          }
+
+          // --- FOOTSTEP AUDIO ---
+          if (gameStarted && !gameEnded && isMoving && camera.position.y <= 1.6 + 0.1) {
+            if (isSprinting && stamina > 0) {
+              if (walkSound && walkSound.isPlaying) walkSound.stop();
+              if (runSound && !runSound.isPlaying) runSound.play();
+            } else {
+              if (runSound && runSound.isPlaying) runSound.stop();
+              if (walkSound && !walkSound.isPlaying) walkSound.play();
+            }
+          } else {
+            if (walkSound && walkSound.isPlaying) walkSound.stop();
+            if (runSound && runSound.isPlaying) runSound.stop();
           }
         } else {
              // TITLE ANIMATION REMOVED (Static Title)
