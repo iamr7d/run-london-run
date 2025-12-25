@@ -1181,13 +1181,11 @@
           
           joystickInner.style.transform = `translate(${dx}px, ${dy}px)`;
           
-          const angle = Math.atan2(dy, dx);
-          const strength = Math.min(distance / maxDrag, 1);
-          
-          moveForward = Math.cos(angle) < -0.5 && strength > 0.3;
-          moveBackward = Math.cos(angle) > 0.5 && strength > 0.3;
-          moveLeft = Math.sin(angle) < -0.5 && strength > 0.3;
-          moveRight = Math.sin(angle) > 0.5 && strength > 0.3;
+          // Simple directional mapping based on joystick position
+          moveForward = dy < -20;
+          moveBackward = dy > 20;
+          moveLeft = dx < -20;
+          moveRight = dx > 20;
         }, { passive: false });
 
         window.addEventListener("touchend", () => {
