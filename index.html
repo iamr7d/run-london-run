@@ -1832,7 +1832,7 @@
           phoneOverlay.style.opacity = "1";
           phoneOverlay.style.transform = "translate(0, 0)"; // Reset transform
           
-          // Then animate it away after being visible for a moment
+          // Then animate it away INSTANTLY
           setTimeout(() => {
             phoneOverlay.style.transform = "translate(500px, -200px)";
             phoneOverlay.style.opacity = "0";
@@ -1840,8 +1840,8 @@
             setTimeout(() => {
               phoneOverlay.style.visibility = "hidden"; // Force visibility hidden
               phoneOverlay.style.display = "none";
-            }, 500);
-          }, 800); // Wait 800ms before snatching away
+            }, 300);
+          }, 0); // NO DELAY - Snatch immediately
 
           const alert = document.getElementById("alert-msg");
           alert.style.display = "block";
