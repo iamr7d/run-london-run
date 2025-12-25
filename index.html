@@ -1592,11 +1592,6 @@
             moveRight = true;
             break;
           case "Space":
-            if (canJump === true) velocity.y += 15;
-            canJump = false;
-            break;
-          case "ShiftLeft":
-          case "ShiftRight":
             isSprinting = true;
             break;
         }
@@ -1620,8 +1615,7 @@
           case "KeyD":
             moveRight = false;
             break;
-          case "ShiftLeft":
-          case "ShiftRight":
+          case "Space":
             isSprinting = false;
             break;
         }
