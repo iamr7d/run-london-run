@@ -1479,8 +1479,9 @@
                 if (listener.context.state === 'suspended') {
                     listener.context.resume();
                 }
-                if(sound.buffer && !sound.isPlaying) {
-                    sound.currentTime = 0; // Start from beginning
+                // Stop and restart to ensure it plays from beginning
+                if(sound.buffer) {
+                    if(sound.isPlaying) sound.stop();
                     sound.play();
                 }
             });
