@@ -1685,7 +1685,8 @@
             // Wait a tiny bit for initial render
             await sleep(100); 
             disclaimer.style.opacity = '1';
-            await sleep(4000);
+            await sleep(2000);
+
 
             // Step 2: Fade Out Disclaimer
             disclaimer.style.opacity = '0';
@@ -1724,11 +1725,13 @@
                         clearInterval(interval);
                         resolve(); // Finish step 4
                     }
-                }, 35);
+                }, 15);
+
             });
 
             // Step 5: Finish
-            await sleep(1000); // Hold at 100%
+            await sleep(400); // Hold at 100%
+
             loader.style.opacity = '0';
             await sleep(500); // Fade out loader
             
@@ -3085,7 +3088,32 @@
         groundTex.repeat.set(width * 2 / 5, length / 6); // Approximate density
         const noiseTex = groundTex; // Alias for buildings that use noiseTex
 
+        // --- INSTANCED BUILDING SETUP ---
+        const maxBuildings = 2000; // Safe upper bound for one side
+        const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+        const solidMat = new THREE.MeshStandardMaterial({
+            map: noiseTex,
+            roughness: 0.8,
+        });
+        const glassMat = new THREE.MeshStandardMaterial({
+            color: 0x88ccff,
+            metalness: 0.8,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.7,
+        });
+        const buildingIM = new THREE.InstancedMesh(buildingGeo, solidMat, maxBuildings);
+        const glassIM = new THREE.InstancedMesh(buildingGeo, glassMat, maxBuildings);
+        buildingIM.castShadow = true;
+        buildingIM.receiveShadow = true;
+        glassIM.castShadow = true;
+        glassIM.receiveShadow = true;
+        let bIdx = 0, gIdx = 0;
+        const dummy = new THREE.Object3D();
+        const dummyColor = new THREE.Color();
+
         // Fix Terrain Z-Fighting: Lower ground to -0.6
+
         const groundGeo = new THREE.BoxGeometry(
           width * 2,
           1,
@@ -3231,57 +3259,24 @@
             } else {
               // BUILDINGS + SIDEWALK TREES
               const height = 20 + Math.random() * 80;
-              const buildingGeo = new THREE.BoxGeometry(
-                blockSize - 10,
-                height,
-                blockSize - 10
-              );
-              const hue = Math.random() * 0.1 + 0.55;
               const isGlass = Math.random() > 0.7;
 
-              let buildingMat;
+              dummy.position.set(x, height / 2 - 0.5, z);
+              dummy.scale.set(blockSize - 10, height, blockSize - 10);
+              dummy.updateMatrix();
+
               if (isGlass) {
-                buildingMat = new THREE.MeshStandardMaterial({
-                  color: new THREE.Color().setHSL(0.6, 0.4, 0.2),
-                  metalness: 0.8,
-                  roughness: 0.1,
-                  transparent: true,
-                  opacity: 0.7,
-                });
+                  const hue = Math.random() * 0.1 + 0.55;
+                  dummyColor.setHSL(0.6, 0.4, 0.2); // Matching original glass style
+                  glassIM.setMatrixAt(gIdx, dummy.matrix);
+                  glassIM.setColorAt(gIdx, dummyColor);
+                  gIdx++;
               } else {
-                buildingMat = new THREE.MeshStandardMaterial({
-                  color: new THREE.Color().setHSL(
-                    hue,
-                    0.2,
-                    0.2 + Math.random() * 0.2
-                  ),
-                  map: noiseTex,
-                  roughness: 0.8,
-                });
-              }
-
-              const building = new THREE.Mesh(buildingGeo, buildingMat);
-              building.position.set(x, height / 2 - 0.5, z);
-              building.castShadow = true;
-              building.receiveShadow = true;
-              scene.add(building);
-
-              // Add glowing windows for night/dusk vibe
-              if (!isGlass && Math.random() > 0.5) {
-                const winGeo = new THREE.BoxGeometry(
-                  blockSize - 10.5,
-                  height - 4,
-                  blockSize - 10.5
-                );
-                const winMat = new THREE.MeshBasicMaterial({
-                  color: 0xffaa00,
-                  wireframe: true,
-                  transparent: true,
-                  opacity: 0.05,
-                });
-                const wins = new THREE.Mesh(winGeo, winMat);
-                wins.position.copy(building.position);
-                scene.add(wins);
+                  const hue = Math.random() * 0.1 + 0.55;
+                  dummyColor.setHSL(hue, 0.2, 0.2 + Math.random() * 0.2);
+                  buildingIM.setMatrixAt(bIdx, dummy.matrix);
+                  buildingIM.setColorAt(bIdx, dummyColor);
+                  bIdx++;
               }
 
               // SIDEWALK TREES: Add trees to the street corners of building blocks
@@ -3290,14 +3285,17 @@
                 // Place near the road (Z +/- blockSize/2)
                 const side = Math.random() > 0.5 ? 1 : -1;
                 const tz = z + (blockSize / 2 - 2) * side;
-                // Avoid placing inside building (Building width is blockSize-10, so boundary is blockSize/2 - 5)
-                // We place slightly outside
                 createRealisticTree(x + (Math.random() - 0.5) * 10, tz);
               }
             }
           }
         }
+        buildingIM.count = bIdx;
+        glassIM.count = gIdx;
+        scene.add(buildingIM);
+        scene.add(glassIM);
       }
+
 
       function createRailing(x, length) {
         const postGeo = new THREE.BoxGeometry(0.5, 1.5, 0.5);
@@ -3873,37 +3871,41 @@
       // --- NEON CITY ---
       let neonGroup;
       function createNeonCity() {
-        neonGroup = new THREE.Group();
         const colors = [0xff00ff, 0x00ffff, 0x00ff00, 0xffaa00];
-        const geo = new THREE.BoxGeometry(2, 8, 0.5);
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        const mat = new THREE.MeshBasicMaterial({ vertexColors: true });
+        const neonIM = new THREE.InstancedMesh(geo, mat, 100);
+        let nIdx = 0;
+        const dummy = new THREE.Object3D();
+        const dummyColor = new THREE.Color();
 
-        for (let i = 0; i < 60; i++) {
-          // Increased count for larger city
-          const color = colors[Math.floor(Math.random() * colors.length)];
-          const mat = new THREE.MeshBasicMaterial({ color: color });
-          const mesh = new THREE.Mesh(geo, mat);
-
-          // Random Grid Position (Approximate city blocks)
+        for (let i = 0; i < 100; i++) {
           const x = (Math.floor(Math.random() * 20) - 10) * 40;
-          let z = (Math.floor(Math.random() * 60) - 30) * 40; // Wider Z spawn
+          let z = (Math.floor(Math.random() * 60) - 30) * 40;
 
-          // Avoid river (approx Z=-50 to 50?)
           if (Math.abs(z) < 60) continue;
 
-          mesh.position.set(
+          dummy.position.set(
             x + (Math.random() - 0.5) * 30,
             15 + Math.random() * 20,
             z + (Math.random() - 0.5) * 30
           );
+          dummy.scale.set(2, 8, 0.5);
+          dummy.rotation.y = Math.random() > 0.5 ? 0 : Math.PI / 2;
+          dummy.updateMatrix();
 
-          // Rotate to face streets
-          mesh.rotation.y = Math.random() > 0.5 ? 0 : Math.PI / 2;
-
-          neonGroup.add(mesh);
+          neonIM.setMatrixAt(nIdx, dummy.matrix);
+          dummyColor.setHex(colors[Math.floor(Math.random() * colors.length)]);
+          neonIM.setColorAt(nIdx, dummyColor);
+          nIdx++;
         }
-        scene.add(neonGroup);
+        neonIM.count = nIdx;
+        scene.add(neonIM);
       }
 
+
+      let petalIM;
+      const petalDummy = new THREE.Object3D();
       function createFallingPetals() {
         const petalGeo = new THREE.PlaneGeometry(0.1, 0.1);
         const petalMat = new THREE.MeshBasicMaterial({
@@ -3913,30 +3915,33 @@
           opacity: 0.8,
         });
 
+        petalIM = new THREE.InstancedMesh(petalGeo, petalMat, 200);
         for (let i = 0; i < 200; i++) {
-          const petal = new THREE.Mesh(petalGeo, petalMat);
-          resetPetal(petal);
-          scene.add(petal);
-          petals.push({
-            mesh: petal,
+          const petalData = {
+            pos: new THREE.Vector3(),
+            rot: new THREE.Euler(),
             speed: 0.5 + Math.random() * 1.5,
             sway: Math.random() * 0.1,
-          });
+          };
+          resetPetalData(petalData);
+          petals.push(petalData);
         }
+        scene.add(petalIM);
       }
 
-      function resetPetal(petal) {
-        petal.position.set(
+      function resetPetalData(p) {
+        p.pos.set(
           (Math.random() - 0.5) * 400,
-          50 + Math.random() * 50, // Start high up
+          50 + Math.random() * 50,
           (Math.random() - 0.5) * 400
         );
-        petal.rotation.set(
+        p.rot.set(
           Math.random() * Math.PI,
           Math.random() * Math.PI,
           Math.random() * Math.PI
         );
       }
+
 
       function createDaffodils() {
         const count = 400; // Reduced from 3000 for performance
@@ -4007,20 +4012,26 @@
       }
 
       function animatePetals() {
-        petals.forEach((p) => {
-          p.mesh.position.y -= p.speed * 0.1;
-          p.mesh.position.x +=
-            Math.sin(Date.now() * 0.001 + p.mesh.position.y) * p.sway;
-          p.mesh.position.z +=
-            Math.cos(Date.now() * 0.0005 + p.mesh.position.y) * p.sway;
-          p.mesh.rotation.y += 0.02;
-          p.mesh.rotation.z += 0.02;
+        if (!petalIM) return;
+        petals.forEach((p, i) => {
+          p.pos.y -= p.speed * 0.1;
+          p.pos.x += Math.sin(Date.now() * 0.001 + p.pos.y) * p.sway;
+          p.pos.z += Math.cos(Date.now() * 0.0005 + p.pos.y) * p.sway;
+          p.rot.y += 0.02;
+          p.rot.z += 0.02;
 
-          if (p.mesh.position.y < -1) {
-            resetPetal(p.mesh);
+          if (p.pos.y < -1) {
+            resetPetalData(p);
           }
+
+          petalDummy.position.copy(p.pos);
+          petalDummy.rotation.copy(p.rot);
+          petalDummy.updateMatrix();
+          petalIM.setMatrixAt(i, petalDummy.matrix);
         });
+        petalIM.instanceMatrix.needsUpdate = true;
       }
+
 
       function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
