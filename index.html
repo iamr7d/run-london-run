@@ -1681,7 +1681,7 @@
                 if (progress === 100) {
                     clearInterval(interval);
                 }
-            }, 250); // Slowed down from 30ms to 250ms (approx 6s total)
+            }, 150); // Speed up slightly (approx 4s total) to match flow better
             
             // Step 2: After 4s, hide disclaimer and show loader with instructions
             setTimeout(() => {
@@ -1718,8 +1718,10 @@
                             instructionIndex += 2; // Move by 2
                         } else {
                             clearInterval(instructionInterval);
+                            // Ensure final opacity is 1 just in case
+                            subtext.style.opacity = 1;
                         }
-                    }, 2000); // Show each pair for 2 seconds
+                    }, 2500); // Show each pair for 2.5 seconds (slightly longer reading time)
                     
                     // Wait for loading to complete AND instructions to finish
                     const checkComplete = setInterval(() => {
