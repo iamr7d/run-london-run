@@ -1591,16 +1591,35 @@
         const audioStartBtn = document.getElementById("start-btn");
         if(audioStartBtn) {
             audioStartBtn.addEventListener("click", () => {
+                // Resume context if suspended
                 if (listener.context.state === 'suspended') {
-                    listener.context.resume();
+                    listener.context.resume().then(() => {
+                        console.log("AudioContext resumed by start button");
+                    });
                 }
-                // Stop and restart to ensure it plays from beginning
+                
+                // Ensure background sound plays
                 if(sound.buffer) {
-                    if(sound.isPlaying) sound.stop();
-                    sound.play();
+                     sound.stop(); // Stop first to reset
+                     sound.play(); 
+                     console.log("Background audio started");
+                } else {
+                     console.warn("Background audio buffer not loaded yet");
                 }
             });
         }
+        
+        // GLOBAL AUDIO RESUME FAILSAFE
+        function resumeAudio() {
+            if (listener.context.state === 'suspended') {
+                listener.context.resume().then(() => {
+                    console.log("AudioContext resumed by global interaction");
+                });
+            }
+        }
+        document.addEventListener('click', resumeAudio);
+        document.addEventListener('touchstart', resumeAudio);
+        document.addEventListener('keydown', resumeAudio);
 
         // 6. Build World
         createSky(); // MOVED UP: Must be first for Sun reference
