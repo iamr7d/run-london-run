@@ -1669,10 +1669,18 @@
                         if (instructionIndex < sequence.length) {
                             subtext.style.opacity = 0;
                             setTimeout(() => {
-                                // Combine two instructions
+                                // Combine two instructions if both exist
                                 const text1 = sequence[instructionIndex];
-                                const text2 = sequence[instructionIndex + 1] || "";
-                                subtext.innerText = text2 ? text1 + " " + text2 : text1;
+                                const text2 = sequence[instructionIndex + 1];
+                                
+                                if (text1 && text2) {
+                                    subtext.innerText = text1 + " " + text2;
+                                } else if (text1) {
+                                    subtext.innerText = text1;
+                                } else {
+                                    subtext.innerText = "";
+                                }
+                                
                                 subtext.style.opacity = 1;
                             }, 150);
                             instructionIndex += 2; // Move by 2
