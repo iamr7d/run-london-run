@@ -3778,8 +3778,8 @@
       }
 
       function createCrowd() {
-        // Significantly increased crowd count
-        for (let i = 0; i < 500; i++) {
+        // Significantly reduced crowd count for performance
+        for (let i = 0; i < 60; i++) {
           const shirtColor = new THREE.Color().setHSL(Math.random(), 0.7, 0.5);
           const person = createRealisticHuman(shirtColor);
 
@@ -3877,7 +3877,7 @@
         const colors = [0xff00ff, 0x00ffff, 0x00ff00, 0xffaa00];
         const geo = new THREE.BoxGeometry(2, 8, 0.5);
 
-        for (let i = 0; i < 120; i++) {
+        for (let i = 0; i < 60; i++) {
           // Increased count for larger city
           const color = colors[Math.floor(Math.random() * colors.length)];
           const mat = new THREE.MeshBasicMaterial({ color: color });
@@ -3913,7 +3913,7 @@
           opacity: 0.8,
         });
 
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 200; i++) {
           const petal = new THREE.Mesh(petalGeo, petalMat);
           resetPetal(petal);
           scene.add(petal);
@@ -3939,7 +3939,7 @@
       }
 
       function createDaffodils() {
-        const count = 800; // Reduced from 3000 for performance
+        const count = 400; // Reduced from 3000 for performance
         const dummy = new THREE.Object3D();
 
         // 1. Stems Instanced Mesh
@@ -3961,7 +3961,7 @@
         let index = 0;
 
         // Scatter along the river banks
-        for (let i = 0; i < 800; i++) {
+        for (let i = 0; i < 400; i++) {
           const x = (Math.random() - 0.5) * 800;
           // Keep away from center (River is approx width 100)
           if (Math.abs(x) < 60) continue;
