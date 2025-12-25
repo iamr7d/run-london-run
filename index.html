@@ -1691,14 +1691,20 @@
                 const interval = setInterval(() => {
                     progress += 1;
                     
-                    // Instructions
-                    if (progress < 30) {
-                        subtext.innerText = sequence[0] + " " + sequence[1];
+                    // Instructions - SPLIT individually (approx 16% each)
+                    if (progress < 16) {
+                        subtext.innerText = sequence[0];
                         subtext.style.opacity = 1;
-                    } else if (progress >= 30 && progress < 65) {
-                        subtext.innerText = sequence[2] + " " + sequence[3];
-                    } else if (progress >= 65) {
-                        subtext.innerText = sequence[4] + " " + sequence[5];
+                    } else if (progress >= 16 && progress < 32) {
+                        subtext.innerText = sequence[1];
+                    } else if (progress >= 32 && progress < 48) {
+                        subtext.innerText = sequence[2];
+                    } else if (progress >= 48 && progress < 64) {
+                        subtext.innerText = sequence[3];
+                    } else if (progress >= 64 && progress < 80) {
+                        subtext.innerText = sequence[4];
+                    } else if (progress >= 80) {
+                        subtext.innerText = sequence[5];
                     }
 
                     if (progress > 100) progress = 100;
