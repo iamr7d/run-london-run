@@ -453,8 +453,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start; /* Moved from center to top */
-        padding-top: 15vh; /* Push down slightly from very top */
+        justify-content: center;
+        padding-top: 0; /* use absolute positioning for children instead */
         color: white;
         text-align: center;
         padding-left: 40px;
@@ -473,7 +473,7 @@
         opacity: 0;
         transform: translateY(10px);
         transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-        text-align: left;
+        text-align: center; /* Forced center */
         border: 1px solid rgba(255,255,255,0.1);
       }
       .case-status-card.show {
@@ -501,8 +501,11 @@
         opacity: 0;
         transition: opacity 2s ease;
         position: absolute;
-        text-align: left; /* Changed from center to left */
-        letter-spacing: 0.01em;
+        top: 20vh; /* Fixed vertical position */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        text-align: center;
       }
       .narrative-text b {
         font-weight: 700;
@@ -516,6 +519,10 @@
         max-width: 1000px; /* Increased from 800px */
         opacity: 0;
         transition: opacity 2s ease;
+        position: absolute;
+        top: 20vh; /* Match narrative text */
+        left: 50%;
+        transform: translateX(-50%);
       }
       #chart-slide h2 {
         font-family: 'Helvetica Neue', Helvetica, sans-serif;
