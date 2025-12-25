@@ -726,6 +726,20 @@
 
       /* --- EXTRA SMALL PHONES (< 480px) --- */
       @media (max-width: 480px) {
+        /* Story Form - Top aligned on mobile to prevent cutoff */
+        #story-slide {
+          top: 0 !important;
+          transform: translate(-50%, 0) !important;
+          padding-top: 20px;
+          max-height: 100vh;
+          overflow-y: auto;
+        }
+        
+        /* Narrative overlay scrollable */
+        #narrative-overlay {
+          overflow-y: auto;
+        }
+        
         /* Phone Overlay - Smaller */
         #phone-overlay {
           width: 150px !important;
