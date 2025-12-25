@@ -1812,6 +1812,7 @@
             phoneOverlay.style.opacity = "0";
             // Hide completely after animation
             setTimeout(() => {
+              phoneOverlay.style.visibility = "hidden"; // Force visibility hidden
               phoneOverlay.style.display = "none";
             }, 500);
           }, 800); // Wait 800ms before snatching away
@@ -1910,18 +1911,42 @@
               }, 1000);
           }, 8000);
 
-          // 4. SHOW STORY SUBMISSION (Skipping Chart)
+          // 4. SHOW QUESTION SLIDE INSTEAD OF STORY SLIDE
     setTimeout(() => {
         slide2.style.opacity = '0';
         setTimeout(() => {
             slide2.style.display = 'none';
-            storySlide.style.display = 'flex';
+            // Show new Question Slide
+            const qSlide = document.getElementById('question-slide');
+            qSlide.style.display = 'flex';
             setTimeout(() => {
-                storySlide.style.opacity = '1';
+                qSlide.style.opacity = '1';
             }, 100);
         }, 2000);
     }, 23000); // Trigger after slide 2 reading time (8000ms + 15000ms)
       }
+
+      function handleQuestionAnswer(answer) {
+          const qSlide = document.getElementById('question-slide');
+          qSlide.style.opacity = '0'; // Fade out question
+          
+          setTimeout(() => {
+              qSlide.style.display = 'none';
+              
+              if (answer === 'yes' || answer === 'someone') {
+                  // Show Story Form
+                  const storySlide = document.getElementById('story-slide');
+                  storySlide.style.display = 'flex';
+                  setTimeout(() => {
+                      storySlide.style.opacity = '1';
+                  }, 100);
+              } else {
+                  // NO -> Skip to Credits/Exit (Reload for now as per previous logic)
+                  window.location.reload();
+              }
+          }, 1000); // Fade out time
+      }
+
 
       // --- SUPABASE INTEGRATION ---
       // Production credentials (safe to use - publishable key with RLS enabled)
