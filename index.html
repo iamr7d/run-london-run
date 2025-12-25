@@ -670,10 +670,13 @@
     <!-- Start Screen -->
     <div id="ui-layer">
       <!-- Simple Percent Loader -->
-      <div id="loading-screen" style="justify-content: center; align-items: center; background: #000;">
-          <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff; text-align: center;">
+      <div id="loading-screen" style="justify-content: center; align-items: center; background: #000; flex-direction: column;">
+          <div id="intro-disclaimer" style="font-family: 'Helvetica Neue', sans-serif; font-size: 1.1rem; color: #888; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; opacity: 0; transition: opacity 2s ease; position: absolute;">
+              Based on thousands of true incidents
+          </div>
+          <div id="loading-text" style="font-family: 'Inter', monospace; font-weight: 300; font-size: 1.5rem; letter-spacing: 2px; color: #fff; text-align: center; opacity: 0; transition: opacity 1s ease;">
             0%
-            <div style="font-size: 0.7rem; color: #666; margin-top: 15px; letter-spacing: 1px;">[ W A S D ] TO MOVE</div>
+            <div id="loading-subtext" style="font-size: 0.8rem; color: #666; margin-top: 20px; letter-spacing: 1px; min-height: 20px; font-family: 'Helvetica Neue', sans-serif;"></div>
           </div>
       </div>
 
@@ -750,7 +753,7 @@
        <div id="story-slide">
           <div class="story-form">
               <h1>What’s your story?</h1>
-              <p>If this has happened to you, you may add your experience.</p>
+              <p>If this has happened to you, you may add your experience.<br>Your story will be represented in the game as a non-interactive figure.</p>
               
               <label>What happened after you reported it?</label>
               <textarea placeholder="Write here..."></textarea>
@@ -1356,31 +1359,77 @@
         console.log("Init sequence complete. Starting animation loop.");
         animate();
 
-        // Percentage Loading Sequence
+        // SEQUENTIAL LOADING LOGIC
         const loadingText = document.getElementById('loading-text');
         const loader = document.getElementById('loading-screen');
         const btn = document.getElementById('start-btn');
+        const disclaimer = document.getElementById('intro-disclaimer');
+        const subtext = document.getElementById('loading-subtext');
 
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 5) + 1; // Random increment
-            if (progress > 100) progress = 100;
+        // Sequence Data
+        const sequence = [
+            "This is an interactive protest.",
+            "This is a short experience.",
+            "You will walk through the city.",
+            "Use W A S D to move.",
+            "Mouse to look around.",
+            "You may try to react.",
+            "Pay attention."
+        ];
+
+        // Step 1: Show Disclaimer
+        setTimeout(() => {
+            disclaimer.style.opacity = '1';
             
-            loadingText.innerText = progress + "%";
-
-            if (progress === 100) {
-                clearInterval(interval);
+            // Step 2: Hide Disclaimer, Start Loader
+            setTimeout(() => {
+                disclaimer.style.opacity = '0';
+                
                 setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        btn.style.display = 'block';
-                        void btn.offsetWidth;
-                        btn.style.opacity = '1';
-                    }, 500);
-                }, 500);
-            }
-        }, 50);
+                    disclaimer.style.display = 'none';
+                    loadingText.style.opacity = '1';
+                    
+                    let progress = 0;
+                    let seqIndex = 0;
+                    
+                    // Progress Loop
+                    const interval = setInterval(() => {
+                        progress += 0.5; // Slow down to allow reading time
+                        if (progress > 100) progress = 100;
+                        
+                        // Update Percentage (Just the number)
+                        loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
+
+                        // Update Subtext based on progress chunks
+                        // We have 7 items. 100 / 7 = approx 14% per item.
+                        const index = Math.min(sequence.length - 1, Math.floor(progress / 14));
+                        if(subtext.innerText !== sequence[index]) {
+                             subtext.style.opacity = 0;
+                             setTimeout(() => {
+                                 subtext.innerText = sequence[index];
+                                 subtext.style.opacity = 1;
+                             }, 200);
+                        }
+
+                        if (progress === 100) {
+                            clearInterval(interval);
+                            
+                            // Final Wait then Reveal Start
+                            setTimeout(() => {
+                                loader.style.opacity = '0';
+                                setTimeout(() => {
+                                    loader.style.display = 'none';
+                                    btn.style.display = 'block';
+                                    void btn.offsetWidth;
+                                    btn.style.opacity = '1';
+                                }, 500);
+                            }, 1000);
+                        }
+                    }, 50); // Tick every 50ms = 50 * 200 = 10s total load time approx
+                    
+                }, 2000); // Wait for disclaimer fade out
+            }, 3000); // Display disclaimer for 3s
+        }, 500);
       }
 
       function onKeyDown(event) {
