@@ -1659,6 +1659,8 @@
 
         // Sequence Data
         const sequence = [
+            "Based on true events.",
+            "",
             "This is an interactive protest.",
             "You will walk through the city.",
             "Use Arrow Keys to move.",
@@ -1667,60 +1669,51 @@
             "Pay attention."
         ];
 
-        // Step 1: Show Disclaimer & Start Loading Simultaneously
+        // Step 1: Start Loading Immediately (No Delay)
         setTimeout(() => {
-            disclaimer.style.opacity = '1';
+            disclaimer.style.display = 'none'; // Hide old disclaimer element
+            loadingText.style.opacity = '1';
             
-            // Start loading progress logic MOVED to after disclaimer
             let progress = 0;
             
-            // Step 2: After 4s, hide disclaimer and show loader with instructions
-            setTimeout(() => {
-                disclaimer.style.opacity = '0';
+            // START PROGRESS BAR & INSTRUCTION SYNC
+            const interval = setInterval(() => {
+                progress += 0.6; // Slower increment -> ~10s total (enough to read 4 blocks)
                 
-                setTimeout(() => {
-                    disclaimer.style.display = 'none';
-                    disclaimer.style.display = 'none';
-                    loadingText.style.opacity = '1';
-                    
-                    // START PROGRESS BAR & INSTRUCTION SYNC
-                    const interval = setInterval(() => {
-                        progress += 1; // Slower increment for smoother reading (approx 150ms * 100 = 15s too slow, adjust interval)
-                        
-                        // SYNCED INSTRUCTIONS
-                        if (progress < 30) {
-                             subtext.innerText = sequence[0] + " " + sequence[1];
-                             subtext.style.opacity = 1;
-                        } else if (progress >= 30 && progress < 65) {
-                             subtext.innerText = sequence[2] + " " + sequence[3];
-                        } else if (progress >= 65) {
-                             subtext.innerText = sequence[4] + " " + sequence[5];
-                        }
+                // SYNCED INSTRUCTIONS
+                // Total 4 pairs now. 100 / 4 = 25% each.
+                if (progress < 25) {
+                        subtext.innerText = sequence[0]; // Just "Based on true events"
+                        subtext.style.opacity = 1;
+                } else if (progress >= 25 && progress < 50) {
+                        subtext.innerText = sequence[2] + " " + sequence[3];
+                } else if (progress >= 50 && progress < 75) {
+                        subtext.innerText = sequence[4] + " " + sequence[5];
+                } else if (progress >= 75) {
+                        subtext.innerText = sequence[6] + " " + sequence[7];
+                }
 
-                        if (progress > 100) progress = 100;
-                        loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-                        
-                        // COMPLETE
-                        if (progress === 100) {
-                             clearInterval(interval);
-                             setTimeout(() => {
-                                loader.style.opacity = '0';
-                                setTimeout(() => {
-                                    loader.style.display = 'none';
-                                    loader.classList.add('hidden');
-                                    loader.style.pointerEvents = 'none';
-                                    btn.style.display = 'block';
-                                    btn.style.pointerEvents = 'auto';
-                                    void btn.offsetWidth;
-                                    btn.style.opacity = '1';
-                                }, 500);
-                            }, 1000); // Wait a moment at 100%
-                        }
-                    }, 60); // 60ms * 100 = 6 seconds total (Perfect reading time)
-
-                }, 400);
-            }, 4000); // 4 seconds for disclaimer
-        }, 300);
+                if (progress > 100) progress = 100;
+                loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
+                
+                // COMPLETE
+                if (progress === 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => {
+                            loader.style.display = 'none';
+                            loader.classList.add('hidden');
+                            loader.style.pointerEvents = 'none';
+                            btn.style.display = 'block';
+                            btn.style.pointerEvents = 'auto';
+                            void btn.offsetWidth;
+                            btn.style.opacity = '1';
+                        }, 500);
+                    }, 1000); // Wait a moment at 100%
+                }
+            }, 60); 
+        }, 100);
       }
 
       function onKeyDown(event) {
