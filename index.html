@@ -1679,7 +1679,7 @@
                 if (progress === 100) {
                     clearInterval(interval);
                 }
-            }, 30);
+            }, 250); // Slowed down from 30ms to 250ms (approx 6s total)
             
             // Step 2: After 4s, hide disclaimer and show loader with instructions
             setTimeout(() => {
@@ -1719,11 +1719,16 @@
                         }
                     }, 2000); // Show each pair for 2 seconds
                     
-                    // Wait for loading to complete if not already
+                    // Wait for loading to complete AND instructions to finish
                     const checkComplete = setInterval(() => {
-                        if (progress >= 100) {
-                            clearInterval(checkComplete);
-                            clearInterval(instructionInterval);
+                        // instructionIndex starts at 2. 
+                        // It increments by 2 each cycle (4, 6). 
+                        // sequence length is 6.
+                        // When it hits 6, it stops.
+                        // So we wait for instructionIndex >= 6
+                        if (progress >= 100 && instructionIndex >= sequence.length) {
+                             clearInterval(checkComplete);
+                             clearInterval(instructionInterval);
                             setTimeout(() => {
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
