@@ -1681,56 +1681,40 @@
                     disclaimer.style.display = 'none';
                     loadingText.style.opacity = '1';
                     
-                    // START PROGRESS BAR HERE (so it starts at 0%)
+                    // START PROGRESS BAR & INSTRUCTION SYNC
                     const interval = setInterval(() => {
-                        progress += 4;
+                        progress += 1; // Slower increment for smoother reading (approx 150ms * 100 = 15s too slow, adjust interval)
+                        
+                        // SYNCED INSTRUCTIONS
+                        if (progress < 30) {
+                             subtext.innerText = sequence[0] + " " + sequence[1];
+                             subtext.style.opacity = 1;
+                        } else if (progress >= 30 && progress < 65) {
+                             subtext.innerText = sequence[2] + " " + sequence[3];
+                        } else if (progress >= 65) {
+                             subtext.innerText = sequence[4] + " " + sequence[5];
+                        }
+
                         if (progress > 100) progress = 100;
                         loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-                        if (progress === 100) clearInterval(interval);
-                    }, 150);
-                    
-                    // Show first TWO instructions combined
-                    subtext.innerText = sequence[0] + " " + sequence[1];
-                    subtext.style.opacity = 1;
-                    
-                    // Cycle through remaining instructions in pairs
-                    let instructionIndex = 2;
-                    const instructionInterval = setInterval(() => {
-                        if (instructionIndex < sequence.length) {
-                            subtext.style.opacity = 0;
-                            setTimeout(() => {
-                                // Combine two instructions if both exist
-                                const text1 = sequence[instructionIndex];
-                                const text2 = sequence[instructionIndex + 1];
-                                
-                                if (text1 && text2) {
-                                    subtext.innerText = text1 + " " + text2;
-                                } else if (text1) {
-                                    subtext.innerText = text1;
-                                } else {
-                                    subtext.innerText = "";
-                                }
-                                
-                                subtext.style.opacity = 1;
-                            }, 150);
-                            instructionIndex += 2; // Move by 2
-                        } else {
-                            clearInterval(instructionInterval);
-                            // Ensure final opacity is 1 just in case
-                            subtext.style.opacity = 1;
+                        
+                        // COMPLETE
+                        if (progress === 100) {
+                             clearInterval(interval);
+                             setTimeout(() => {
+                                loader.style.opacity = '0';
+                                setTimeout(() => {
+                                    loader.style.display = 'none';
+                                    loader.classList.add('hidden');
+                                    loader.style.pointerEvents = 'none';
+                                    btn.style.display = 'block';
+                                    btn.style.pointerEvents = 'auto';
+                                    void btn.offsetWidth;
+                                    btn.style.opacity = '1';
+                                }, 500);
+                            }, 1000); // Wait a moment at 100%
                         }
-                    }, 2500); // Show each pair for 2.5 seconds (slightly longer reading time)
-                    
-                    // Wait for loading to complete AND instructions to finish
-                    const checkComplete = setInterval(() => {
-                        // instructionIndex starts at 2. 
-                        // It increments by 2 each cycle (4, 6). 
-                        // sequence length is 6.
-                        // When it hits 6, it stops.
-                        // So we wait for instructionIndex >= 6
-                        if (progress >= 100 && instructionIndex >= sequence.length) {
-                             clearInterval(checkComplete);
-                             clearInterval(instructionInterval);
+                    }, 60); // 60ms * 100 = 6 seconds total (Perfect reading time)
                             setTimeout(() => {
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
