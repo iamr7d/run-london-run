@@ -1667,58 +1667,66 @@
             "Pay attention."
         ];
 
-        // Step 1: Start Disclaimer Phase (0s - 4s)
-        setTimeout(() => {
+        // Helper to replace setTimeout
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function runLoadingSequence() {
+            // Step 1: Show Disclaimer (4s)
+            // Wait a tiny bit for initial render
+            await sleep(100); 
             disclaimer.style.opacity = '1';
+            await sleep(4000);
+
+            // Step 2: Fade Out Disclaimer
+            disclaimer.style.opacity = '0';
+            await sleep(400);
+            disclaimer.style.display = 'none';
+
+            // Step 3: Start Loader
+            loadingText.style.opacity = '1';
             
-            // Step 2: HIDE Disclaimer & START Loading (at 4s)
-            setTimeout(() => {
-                disclaimer.style.opacity = '0';
-                
-                setTimeout(() => {
-                    disclaimer.style.display = 'none';
-                    loadingText.style.opacity = '1';
-
-                    let progress = 0;
+            // Step 4: Progress Bar Loop (Wrapped in Promise)
+            await new Promise(resolve => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 1;
                     
-                    // START PROGRESS BAR & INSTRUCTION SYNC
-                    const interval = setInterval(() => {
-                        progress += 1; // Speed -> ~6s total (enough for 3 blocks)
-                        
-                        // SYNCED INSTRUCTIONS
-                        // Total 3 pairs (6 items). ~33% each.
-                        if (progress < 30) {
-                                subtext.innerText = sequence[0] + " " + sequence[1];
-                                subtext.style.opacity = 1;
-                        } else if (progress >= 30 && progress < 65) {
-                                subtext.innerText = sequence[2] + " " + sequence[3];
-                        } else if (progress >= 65) {
-                                subtext.innerText = sequence[4] + " " + sequence[5];
-                        }
+                    // Instructions
+                    if (progress < 30) {
+                        subtext.innerText = sequence[0] + " " + sequence[1];
+                        subtext.style.opacity = 1;
+                    } else if (progress >= 30 && progress < 65) {
+                        subtext.innerText = sequence[2] + " " + sequence[3];
+                    } else if (progress >= 65) {
+                        subtext.innerText = sequence[4] + " " + sequence[5];
+                    }
 
-                        if (progress > 100) progress = 100;
-                        loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-                        
-                        // COMPLETE
-                        if (progress === 100) {
-                                clearInterval(interval);
-                                setTimeout(() => {
-                                loader.style.opacity = '0';
-                                setTimeout(() => {
-                                    loader.style.display = 'none';
-                                    loader.classList.add('hidden');
-                                    loader.style.pointerEvents = 'none';
-                                    btn.style.display = 'block';
-                                    btn.style.pointerEvents = 'auto';
-                                    void btn.offsetWidth;
-                                    btn.style.opacity = '1';
-                                }, 500);
-                            }, 1000); // Wait a moment at 100%
-                        }
-                    }, 60); 
-                }, 400); // short fade buffer
-            }, 4000); // SHOW DISCLAIMER FOR 4 SECONDS
-        }, 100);
+                    if (progress > 100) progress = 100;
+                    loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
+
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        resolve(); // Finish step 4
+                    }
+                }, 60);
+            });
+
+            // Step 5: Finish
+            await sleep(1000); // Hold at 100%
+            loader.style.opacity = '0';
+            await sleep(500); // Fade out loader
+            
+            loader.style.display = 'none';
+            loader.classList.add('hidden');
+            loader.style.pointerEvents = 'none';
+            btn.style.display = 'block';
+            btn.style.pointerEvents = 'auto';
+            void btn.offsetWidth;
+            btn.style.opacity = '1';
+        }
+
+        // Execute
+        runLoadingSequence();
       }
 
       function onKeyDown(event) {
