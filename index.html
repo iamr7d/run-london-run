@@ -717,9 +717,9 @@
       }
       
       
-      /* Show rotation prompt only on mobile/tablet in portrait */
+      /* Show rotation prompt only on mobile/tablet in portrait AND during gameplay */
       @media (max-width: 1024px) and (orientation: portrait) {
-        #rotation-prompt {
+        body.game-active #rotation-prompt {
           display: flex !important;
         }
       }
@@ -1406,6 +1406,9 @@
         // Initial Time Set (Moved to end)
 
         startBtn.addEventListener("click", () => {
+          // Add game-active class for rotation prompt
+          document.body.classList.add("game-active");
+          
           if (isMobile) {
             uiLayer.classList.add("hidden");
             // Show mobile controls when game starts
