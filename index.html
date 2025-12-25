@@ -1096,6 +1096,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DeviceOrientationControls.js"></script>
     <!-- Post Processing -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
@@ -1309,35 +1310,25 @@
           e.preventDefault();
         }, { passive: false });
 
-        // Touch to Look
-        window.addEventListener("touchstart", (e) => {
-          if (e.target.closest("#mobile-controls") || !gameStarted) return;
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }, { passive: false });
-
-        window.addEventListener("touchmove", (e) => {
-          if (e.target.closest("#mobile-controls") || !gameStarted) return;
-          if (touchStartX === undefined) return;
-
-          const touchX = e.touches[0].clientX;
-          const touchY = e.touches[0].clientY;
-          
-          const dx = touchX - touchStartX;
-          const dy = touchY - touchStartY;
-
-          const sensitivity = 0.005;
-          
-          // Rotate camera directly
-          camera.rotation.y -= dx * sensitivity;
-          // Pitch rotation needs careful clamping
-          camera.rotation.order = 'YXZ'; // Important for FPS rotation
-          camera.rotation.x -= dy * sensitivity;
-          camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
-
-          touchStartX = touchX;
-          touchStartY = touchY;
-        }, { passive: false });
+        // Global function to enable Gyro controls (called by Start Button)
+        window.enableMobileControls = async () => {
+             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                  // iOS 13+ requires permission
+                  try {
+                      const permissionState = await DeviceOrientationEvent.requestPermission();
+                      if (permissionState === 'granted') {
+                          controls = new THREE.DeviceOrientationControls(camera);
+                          console.log("Gyro Controls Enabled (iOS)");
+                      }
+                  } catch (error) {
+                      console.error("Gyro Permission Denied", error);
+                  }
+             } else {
+                  // Android / Non-iOS
+                  controls = new THREE.DeviceOrientationControls(camera);
+                  console.log("Gyro Controls Enabled (Android/Other)");
+             }
+        };
       }
 
       let currentSkyConfig = TimePresets.Morning;
@@ -1610,6 +1601,11 @@
                     listener.context.resume().then(() => {
                         console.log("AudioContext resumed by start button");
                     });
+                }
+
+                // Enable Mobile Controls (Gyro)
+                if (isMobile && window.enableMobileControls) {
+                     window.enableMobileControls();
                 }
                 
                 // Ensure background sound plays
@@ -4025,6 +4021,11 @@
 
       function animate() {
         requestAnimationFrame(animate);
+
+        // Update Controls (Required for DeviceOrientation)
+        if (controls && controls.update) {
+             controls.update(); 
+        }
 
         if (gameEnded) return;
 
