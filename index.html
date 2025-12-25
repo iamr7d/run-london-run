@@ -1669,19 +1669,8 @@
         setTimeout(() => {
             disclaimer.style.opacity = '1';
             
-            // Start loading progress DURING disclaimer (parallel, but hidden)
+            // Start loading progress logic MOVED to after disclaimer
             let progress = 0;
-            const interval = setInterval(() => {
-                progress += 4;
-                if (progress > 100) progress = 100;
-                
-                // Update Percentage (but it's hidden during disclaimer)
-                loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-
-                if (progress === 100) {
-                    clearInterval(interval);
-                }
-            }, 150); // Speed up slightly (approx 4s total) to match flow better
             
             // Step 2: After 4s, hide disclaimer and show loader with instructions
             setTimeout(() => {
@@ -1689,7 +1678,16 @@
                 
                 setTimeout(() => {
                     disclaimer.style.display = 'none';
+                    disclaimer.style.display = 'none';
                     loadingText.style.opacity = '1';
+                    
+                    // START PROGRESS BAR HERE (so it starts at 0%)
+                    const interval = setInterval(() => {
+                        progress += 4;
+                        if (progress > 100) progress = 100;
+                        loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
+                        if (progress === 100) clearInterval(interval);
+                    }, 150);
                     
                     // Show first TWO instructions combined
                     subtext.innerText = sequence[0] + " " + sequence[1];
