@@ -952,8 +952,28 @@
               
               <div class="story-footer">
                   <button class="share-btn" onclick="submitStory()">Share story</button>
+                  <button class="share-btn" onclick="skipStory()" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">Never had this experience</button>
                   <a class="exit-link" onclick="location.reload()">Exit</a>
               </div>
+          </div>
+       </div>
+
+       <!-- Confirmation Slide -->
+       <div id="confirmation-slide" style="display: none; opacity: 0; transition: opacity 2s ease;">
+          <div class="story-form" style="text-align: center;">
+              <h1 style="font-size: 1.5rem; margin-bottom: 30px;">Your story added to system</h1>
+              <p style="color: #666; font-size: 0.9rem; margin-bottom: 40px;">Thank you for sharing your experience.</p>
+              <button class="share-btn" onclick="location.reload()" style="margin-top: 20px;">Return to start</button>
+          </div>
+       </div>
+
+       <!-- Credits Slide -->
+       <div id="credits-slide" style="display: none; opacity: 0; transition: opacity 2s ease;">
+          <div class="story-form" style="text-align: center;">
+              <p style="color: #666; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px;">Created by</p>
+              <h1 style="font-size: 1.3rem; font-weight: 300; margin-bottom: 10px;">Rahulraj P V</h1>
+              <p style="color: #888; font-size: 0.85rem;">University of the Arts London</p>
+              <button class="share-btn" onclick="location.reload()" style="margin-top: 40px;">Return to start</button>
           </div>
        </div>
     </div>
@@ -1936,14 +1956,35 @@
                   btn.disabled = false;
               } else {
                   console.log('Story Saved:', data);
-                  btn.innerText = 'STORY SHARED';
-                  textarea.value = ''; // Clear input
+                  // Show confirmation slide
+                  document.getElementById('story-slide').style.opacity = '0';
+                  setTimeout(() => {
+                      document.getElementById('story-slide').style.display = 'none';
+                      const confirmSlide = document.getElementById('confirmation-slide');
+                      confirmSlide.style.display = 'flex';
+                      setTimeout(() => {
+                          confirmSlide.style.opacity = '1';
+                      }, 100);
+                  }, 1000);
               }
           } catch (err) {
                console.error('Submission Exception:', err);
                btn.innerText = 'ERROR';
                btn.disabled = false;
           }
+      }
+
+      function skipStory() {
+          // Show credits slide
+          document.getElementById('story-slide').style.opacity = '0';
+          setTimeout(() => {
+              document.getElementById('story-slide').style.display = 'none';
+              const creditsSlide = document.getElementById('credits-slide');
+              creditsSlide.style.display = 'flex';
+              setTimeout(() => {
+                  creditsSlide.style.opacity = '1';
+              }, 100);
+          }, 1000);
       }
 
       function initTheftChart() {
