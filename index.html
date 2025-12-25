@@ -967,7 +967,7 @@
               
               <div class="story-footer">
                   <button class="share-btn" onclick="submitStory()">Share story</button>
-                  <a class="exit-link" onclick="location.reload()">Exit</a>
+                  <a class="exit-link" onclick="showCredits()">Exit</a>
               </div>
           </div>
        </div>
@@ -982,12 +982,14 @@
        </div>
 
        <!-- Credits Slide -->
-       <div id="credits-slide" style="display: none; opacity: 0; transition: opacity 2s ease;">
+       <div id="credits-slide" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; background: #000; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 2s ease; z-index: 200;">
           <div class="story-form" style="text-align: center;">
-              <p style="color: #666; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px;">Created by</p>
-              <h1 style="font-size: 1.3rem; font-weight: 300; margin-bottom: 10px;">Rahulraj P V</h1>
-              <p style="color: #888; font-size: 0.85rem;">University of the Arts London</p>
-              <button class="share-btn" onclick="location.reload()" style="margin-top: 40px;">Return to start</button>
+              <p style="color: #666; font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px;">Created by</p>
+              <h1 style="font-size: 2rem; font-weight: 300; margin-bottom: 20px; color: #fff;">Rahulraj P V</h1>
+              <p style="color: #888; font-size: 0.9rem; margin-bottom: 10px; font-family: 'Helvetica Neue', sans-serif;">University of the Arts London</p>
+              <p style="color: #555; font-size: 0.8rem; margin-top: 40px; margin-bottom: 50px;">Music & Sound Assets<br>Epidemic Sound / Freesound</p>
+              
+              <button class="exit-link" onclick="window.location.reload()" style="font-size: 0.9rem; border: 1px solid #333; padding: 10px 30px; border-radius: 4px;">RETURN TO START</button>
           </div>
        </div>
     </div>
@@ -1965,10 +1967,33 @@
                       storySlide.style.opacity = '1';
                   }, 100);
               } else {
-                  // NO -> Skip to Credits/Exit (Reload for now as per previous logic)
-                  window.location.reload();
+                  // NO -> Show Credits
+                  showCredits();
               }
           }, 1000); // Fade out time
+      }
+      
+      function showCredits() {
+          // Hide Question or Story slides if open
+          const qSlide = document.getElementById('question-slide');
+          const storySlide = document.getElementById('story-slide');
+          const confirmSlide = document.getElementById('confirmation-slide');
+          
+          if(qSlide) qSlide.style.display = 'none';
+          if(storySlide) storySlide.style.display = 'none';
+          if(confirmSlide) confirmSlide.style.display = 'none';
+          
+          const credits = document.getElementById('credits-slide');
+          credits.style.display = 'flex';
+          
+          // Ensure overlay is visible if it was hidden
+          document.getElementById('narrative-overlay').style.display = 'flex'; 
+          document.getElementById('narrative-overlay').style.visibility = 'visible';
+          document.getElementById('narrative-overlay').style.opacity = '1';
+
+          setTimeout(() => {
+              credits.style.opacity = '1';
+          }, 100);
       }
 
 
