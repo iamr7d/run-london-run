@@ -1552,31 +1552,21 @@
         setTimeout(() => {
             disclaimer.style.opacity = '1';
             
-            // Start loading progress DURING disclaimer (parallel)
+            // Start loading progress DURING disclaimer (parallel, but hidden)
             let progress = 0;
             const interval = setInterval(() => {
                 progress += 4;
                 if (progress > 100) progress = 100;
                 
-                // Update Percentage
+                // Update Percentage (but it's hidden during disclaimer)
                 loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-
-                // Update Subtext (6 items)
-                const index = Math.min(sequence.length - 1, Math.floor(progress / 17.5));
-                if(subtext.innerText !== sequence[index]) {
-                     subtext.style.opacity = 0;
-                     setTimeout(() => {
-                         subtext.innerText = sequence[index];
-                         subtext.style.opacity = 1;
-                     }, 150);
-                }
 
                 if (progress === 100) {
                     clearInterval(interval);
                 }
             }, 30);
             
-            // Step 2: After 4s, hide disclaimer and show loader
+            // Step 2: After 4s, hide disclaimer and show loader with instructions
             setTimeout(() => {
                 disclaimer.style.opacity = '0';
                 
@@ -1584,10 +1574,30 @@
                     disclaimer.style.display = 'none';
                     loadingText.style.opacity = '1';
                     
+                    // Show first instruction immediately
+                    subtext.innerText = sequence[0];
+                    subtext.style.opacity = 1;
+                    
+                    // Cycle through remaining instructions based on time
+                    let instructionIndex = 0;
+                    const instructionInterval = setInterval(() => {
+                        instructionIndex++;
+                        if (instructionIndex < sequence.length) {
+                            subtext.style.opacity = 0;
+                            setTimeout(() => {
+                                subtext.innerText = sequence[instructionIndex];
+                                subtext.style.opacity = 1;
+                            }, 150);
+                        } else {
+                            clearInterval(instructionInterval);
+                        }
+                    }, 800); // Change instruction every 800ms
+                    
                     // Wait for loading to complete if not already
                     const checkComplete = setInterval(() => {
                         if (progress >= 100) {
                             clearInterval(checkComplete);
+                            clearInterval(instructionInterval);
                             setTimeout(() => {
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
