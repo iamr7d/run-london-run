@@ -52,6 +52,19 @@
         );
       }
 
+      #loading-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 50;
+        pointer-events: auto;
+      }
+      #loading-screen.hidden {
+        pointer-events: none !important;
+      }
+
       .hidden {
         opacity: 0;
         pointer-events: none;
@@ -171,6 +184,9 @@
         border: none;
         border-radius: 4px;
         transition: all 0.2s ease;
+        position: relative;
+        z-index: 100;
+        touch-action: manipulation;
       }
 
       .btn:hover {
@@ -1602,8 +1618,10 @@
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
                                     loader.style.display = 'none';
-                                    loader.style.pointerEvents = 'none'; // Ensure no blocking
+                                    loader.classList.add('hidden');
+                                    loader.style.pointerEvents = 'none';
                                     btn.style.display = 'block';
+                                    btn.style.pointerEvents = 'auto';
                                     void btn.offsetWidth;
                                     btn.style.opacity = '1';
                                 }, 200);
