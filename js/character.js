@@ -223,63 +223,76 @@ export class Character {
     }
 
     handleGroundCollisions(colliders) {
-        // Raycast down from center of body
-        this.rayOrigin.copy(this.mesh.position);
-        this.rayOrigin.y += 0.8; // Start from chest height
+        // Optimized: Ask World for ground height at current position
+        const x = this.mesh.position.x;
+        const z = this.mesh.position.z;
+        
+        let worldY = 0;
+        if (window.game && window.game.world) {
+            worldY = window.game.world.getGroundHeight(x, z);
+        }
 
-        this.raycaster.set(this.rayOrigin, new THREE.Vector3(0, -1, 0));
+        // Special check for "Special Objects" (Bridge, etc) that act as colliders
+        let specialY = -999;
         
-        // Intersect
-        const hits = this.raycaster.intersectObjects(colliders, false); // false = don't check children recursively if not needed, true if needed
-        
-        if (hits.length > 0) {
-            // Find the closest hit that is FACING UP
-            // (Basic logic: just take first hit for now)
-            const hit = hits[0];
-            const dist = hit.distance;
+        if (colliders && colliders.length > 0) {
+            this.rayOrigin.copy(this.mesh.position);
+            this.rayOrigin.y += 0.8;
+            this.raycaster.set(this.rayOrigin, new THREE.Vector3(0, -1, 0));
+            const hits = this.raycaster.intersectObjects(colliders, false);
             
-            // "0.8" is the ray origin offset. So distance 0.8 means feet are exactly on ground.
-            const distToFeet = dist - 0.8;
-
-            // If we are falling and close to ground
-            if (this.velocity.y <= 0 && distToFeet < this.groundTolerance) {
-                this.mesh.position.y = hit.point.y;
-                this.velocity.y = 0;
-                this.onGround = true;
-                this.jumpCount = 0;
-            } else {
-                this.onGround = false;
+            if (hits.length > 0) {
+                const hit = hits[0];
+                specialY = hit.point.y;
             }
+        }
+
+        // Final Ground Height
+        const finalGroundH = Math.max(worldY, specialY);
+
+        if (this.velocity.y <= 0 && this.mesh.position.y <= finalGroundH + this.groundTolerance) {
+            this.mesh.position.y = finalGroundH;
+            this.velocity.y = 0;
+            this.onGround = true;
+            this.jumpCount = 0;
         } else {
             this.onGround = false;
         }
     }
 
     checkWallCollision(pos, colliders) {
-        // Box collision for Walls
-        // Create a box at the INTENDED position
+        // 1. Check World Grid (Buildings)
+        if (window.game && window.game.world) {
+            // Player box at INTENDED position
+            const min = new THREE.Vector3(pos.x - 0.4, pos.y + 0.5, pos.z - 0.4);
+            const max = new THREE.Vector3(pos.x + 0.4, pos.y + 1.8, pos.z + 0.4);
+            this.box.set(min, max);
+
+            const obstacles = window.game.world.getObstructions(this.box); 
+
+            for (let o of obstacles) {
+                 if (this.box.intersectsBox(o.box)) {
+                     if (pos.y < o.height - 0.5) return true; 
+                 }
+            }
+        }
+
+        // 2. Check Special Colliders (Bridge etc)
         const min = new THREE.Vector3(pos.x - 0.4, pos.y + 0.5, pos.z - 0.4);
         const max = new THREE.Vector3(pos.x + 0.4, pos.y + 1.8, pos.z + 0.4);
         this.box.set(min, max);
-
+        
         for(let obj of colliders) {
-            // Broadphase
             if (obj.position.distanceToSquared(pos) > 100) continue;
-
             if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
             this.tempBox.copy(obj.geometry.boundingBox).applyMatrix4(obj.matrixWorld);
 
             if (this.box.intersectsBox(this.tempBox)) {
-                // Determine if it's a wall or a floor we can step up
-                // If the obstacle top is low enough, we handle it in Raycast (Step up)
-                // But for now, treat everything overlapping this body box as a wall
-                
-                // Exclude the ground plane (usually very large or y=0)
-                if (this.tempBox.max.y < pos.y + 0.5) continue; // It's below us
-                
+                if (this.tempBox.max.y < pos.y + 0.5) continue;
                 return true;
             }
         }
+        
         return false;
     }
 

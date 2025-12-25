@@ -50,52 +50,134 @@ export class World {
     }
 
     generateCity() {
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const lightGeo = new THREE.CylinderGeometry(0.1, 0.1, 3);
-        const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffaa });
+        // --- Configuration ---
+        const range = 300;
+        const step = 20;
+        const countX = Math.floor((range * 2) / step);
+        const maxBuildings = countX * countX; // Rough max
+        const maxWindows = maxBuildings * 30; // Estimate 30 windows per building max
+
+        // --- Geometry & Materials ---
+        const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+        const buildingMat = this.materials.building; 
         
-        // Extended Grid
+        const winGeo = new THREE.PlaneGeometry(0.5, 0.5);
+        const winMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Will be tinted per instance
+
+        // --- Instanced Meshes ---
+        this.instancedBuildings = new THREE.InstancedMesh(buildingGeo, buildingMat, maxBuildings);
+        this.instancedBuildings.castShadow = true;
+        this.instancedBuildings.receiveShadow = true;
+        
+        // Outline (Hull) - Simplified as slightly larger black boxes
+        const outlineGeo = new THREE.BoxGeometry(1, 1, 1);
+        const outlineMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+        this.instancedOutlines = new THREE.InstancedMesh(outlineGeo, outlineMat, maxBuildings);
+
+        this.instancedWindows = new THREE.InstancedMesh(winGeo, winMat, maxWindows);
+
+        // --- Collision Data ---
+        this.obstacles = []; // Array of { box: Box3 }
+
+        // --- Generation Loop ---
+        const dummy = new THREE.Object3D();
+        const dummyColor = new THREE.Color();
+        let bIdx = 0;
+        let wIdx = 0;
+
         for(let x = -300; x <= 300; x += 20) {
             for(let z = -300; z <= 300; z += 20) {
                 // Clear center area for spawn
                 if (Math.abs(x) < 20 && Math.abs(z) < 20) continue; 
                 
-                // Clear River Area (Simple band for now)
+                // Clear River Area
                 if (z > 20 && z < 80) continue;
 
-                // Randomize Building
-                const height = Math.random() * 40 + 10; // Taller buildings
+                // Configure Building
+                const height = Math.random() * 40 + 10;
                 const width = Math.random() * 10 + 8;
                 const depth = Math.random() * 10 + 8;
 
-                const building = new THREE.Mesh(geometry, this.materials.building);
-                building.position.set(x, height / 2, z);
-                building.scale.set(width, height, depth);
-                building.castShadow = true;
-                building.receiveShadow = true;
+                // 1. Building Instance
+                dummy.position.set(x, height / 2, z);
+                dummy.scale.set(width, height, depth);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
                 
-                this.addOutline(building);
+                this.instancedBuildings.setMatrixAt(bIdx, dummy.matrix);
+                
+                // 2. Outline Instance
+                dummy.scale.set(width * 1.05, height * 1.05, depth * 1.05); // Slightly bigger
+                dummy.updateMatrix();
+                this.instancedOutlines.setMatrixAt(bIdx, dummy.matrix);
 
-                this.scene.add(building);
-                this.colliders.push(building);
+                // 3. Collision Data
+                const box = new THREE.Box3();
+                box.min.set(x - width/2, 0, z - depth/2);
+                box.max.set(x + width/2, height, z + depth/2);
+                this.obstacles.push({ box: box, height: height, y: height }); // Store obstacle
+                
+                bIdx++;
 
-                // Add Windows
-                if (Math.random() > 0.3) this.addWindows(building, width, height, depth);
+                // 4. Windows (Instanced)
+                if (Math.random() > 0.3) {
+                    const winCount = Math.floor(height / 2);
+                    for(let i = 0; i < winCount; i++) {
+                        if (wIdx >= maxWindows) break;
 
-                // Add Street Lights (in gaps)
-                if (Math.random() > 0.7) {
-                    const post = new THREE.Mesh(lightGeo, this.materials.building);
-                    post.position.set(x + width/2 + 2, 1.5, z + depth/2 + 2);
-                    
-                    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.5), lightMat);
-                    bulb.position.y = 1.5;
-                    post.add(bulb);
-                    
-                    this.scene.add(post);
-                    this.colliders.push(post);
+                        // Front Face Windows
+                        dummy.position.set(x, (i * 1.5) - height/2 + 2 + (height/2), z + depth/2 + 0.05);
+                        dummy.scale.set(1, 1, 1);
+                        dummy.rotation.set(0, 0, 0);
+                        dummy.updateMatrix();
+
+                        // Random Neon Color
+                        const colors = [0x00fff2, 0xff0055, 0xffcc00];
+                        const col = colors[Math.floor(Math.random() * colors.length)];
+                        dummyColor.setHex(col);
+
+                        this.instancedWindows.setMatrixAt(wIdx, dummy.matrix);
+                        this.instancedWindows.setColorAt(wIdx, dummyColor);
+                        wIdx++;
+                    }
                 }
             }
         }
+
+        // Finalize Instanced Meshes
+        this.instancedBuildings.count = bIdx;
+        this.instancedOutlines.count = bIdx;
+        this.instancedWindows.count = wIdx;
+
+        this.scene.add(this.instancedBuildings);
+        this.scene.add(this.instancedOutlines);
+        this.scene.add(this.instancedWindows);
+    }
+    
+    // Efficient Collision Methods for Character
+    getObstructions(box) {
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        
+        // Return subsets of this.obstacles that are close
+        return this.obstacles.filter(o => {
+            const dx = o.box.min.x + (o.box.max.x - o.box.min.x)/2 - center.x;
+            const dz = o.box.min.z + (o.box.max.z - o.box.min.z)/2 - center.z;
+            return (dx*dx + dz*dz) < 900; 
+        });
+    }
+
+    getGroundHeight(x, z) {
+        let maxY = 0; // Ground plane
+
+        for (let o of this.obstacles) {
+            if (x >= o.box.min.x && x <= o.box.max.x &&
+                z >= o.box.min.z && z <= o.box.max.z) {
+                if (o.height > maxY) maxY = o.height;
+            }
+        }
+        
+        return maxY;
     }
 
     generateCollectibles() {
