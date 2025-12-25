@@ -1416,7 +1416,10 @@
                 if (listener.context.state === 'suspended') {
                     listener.context.resume();
                 }
-                if(sound.buffer && !sound.isPlaying) sound.play();
+                if(sound.buffer && !sound.isPlaying) {
+                    sound.currentTime = 0; // Start from beginning
+                    sound.play();
+                }
             });
         }
 
@@ -1462,11 +1465,35 @@
             "Pay attention."
         ];
 
-        // Step 1: Show Disclaimer
+        // Step 1: Show Disclaimer & Start Loading Simultaneously
         setTimeout(() => {
             disclaimer.style.opacity = '1';
             
-            // Step 2: Hide Disclaimer, Start Loader
+            // Start loading progress DURING disclaimer (parallel)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 4;
+                if (progress > 100) progress = 100;
+                
+                // Update Percentage
+                loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
+
+                // Update Subtext (6 items)
+                const index = Math.min(sequence.length - 1, Math.floor(progress / 17.5));
+                if(subtext.innerText !== sequence[index]) {
+                     subtext.style.opacity = 0;
+                     setTimeout(() => {
+                         subtext.innerText = sequence[index];
+                         subtext.style.opacity = 1;
+                     }, 150);
+                }
+
+                if (progress === 100) {
+                    clearInterval(interval);
+                }
+            }, 30);
+            
+            // Step 2: After 4s, hide disclaimer and show loader
             setTimeout(() => {
                 disclaimer.style.opacity = '0';
                 
@@ -1474,29 +1501,10 @@
                     disclaimer.style.display = 'none';
                     loadingText.style.opacity = '1';
                     
-                    let progress = 0;
-                    
-                    // Progress Loop
-                    const interval = setInterval(() => {
-                        progress += 4; // DRAMATICALLY FASTER
-                        if (progress > 100) progress = 100;
-                        
-                        // Update Percentage
-                        loadingText.childNodes[0].nodeValue = Math.floor(progress) + "%";
-
-                        // Update Subtext (6 items now)
-                        const index = Math.min(sequence.length - 1, Math.floor(progress / 17.5));
-                        if(subtext.innerText !== sequence[index]) {
-                             subtext.style.opacity = 0;
-                             setTimeout(() => {
-                                 subtext.innerText = sequence[index];
-                                 subtext.style.opacity = 1;
-                             }, 150);
-                        }
-
-                        if (progress === 100) {
-                            clearInterval(interval);
-                            
+                    // Wait for loading to complete if not already
+                    const checkComplete = setInterval(() => {
+                        if (progress >= 100) {
+                            clearInterval(checkComplete);
                             setTimeout(() => {
                                 loader.style.opacity = '0';
                                 setTimeout(() => {
@@ -1507,10 +1515,10 @@
                                 }, 200);
                             }, 300);
                         }
-                    }, 30); // Faster interval
-                }, 400); // Super short wait
-            }, 600); // Shorter disclaimer display
-        }, 300); // Immediate start
+                    }, 50);
+                }, 400);
+            }, 4000); // 4 seconds for disclaimer
+        }, 300);
       }
 
       function onKeyDown(event) {
@@ -1618,6 +1626,13 @@
 
           // 2. GETAWAY START
           snatcherSpeed = 12;
+          
+          // 3. SPEED BOOST AFTER 5 SECONDS
+          setTimeout(() => {
+            if (!gameEnded && snatchActive) {
+              snatcherSpeed = 28; // Significant speed increase
+            }
+          }, 5000); // 5 seconds after robbery
         }, 900);
       }
 
