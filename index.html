@@ -1558,7 +1558,9 @@
                 sound.setBuffer(buffer);
                 sound.setLoop(true);
                 sound.setVolume(0.6);
-                sound.play(); // Play immediately if possible
+                if (!sound.isPlaying) {
+                    sound.play(); // Play immediately if possible
+                }
             },
             undefined,
             function(error) {
