@@ -1820,12 +1820,17 @@
           phoneOverlay.style.display = "flex"; // Show phone
           phoneOverlay.style.bottom = "-40px"; // Slide into view
           phoneOverlay.style.opacity = "1";
+          phoneOverlay.style.transform = "translate(0, 0)"; // Reset transform
           
-          // Then animate it away
+          // Then animate it away after being visible for a moment
           setTimeout(() => {
             phoneOverlay.style.transform = "translate(500px, -200px)";
             phoneOverlay.style.opacity = "0";
-          }, 100);
+            // Hide completely after animation
+            setTimeout(() => {
+              phoneOverlay.style.display = "none";
+            }, 500);
+          }, 800); // Wait 800ms before snatching away
 
           const alert = document.getElementById("alert-msg");
           alert.style.display = "block";
