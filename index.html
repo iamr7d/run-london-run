@@ -1797,9 +1797,15 @@
       function triggerSnatch() {
         if (phoneSnatched) return;
 
-        // Spawn behind player
+        // Spawn behind player but constrained to ROAD (X: -7 to 7)
+        // Sidewalk starts at +/- 8.5
+        const roadLimit = 7.0;
+        let spawnX = camera.position.x - 2; 
+        if(spawnX > roadLimit) spawnX = roadLimit;
+        if(spawnX < -roadLimit) spawnX = -roadLimit;
+
         snatcherMesh.position.set(
-          camera.position.x - 2,
+          spawnX,
           0,
           camera.position.z + 20
         );
