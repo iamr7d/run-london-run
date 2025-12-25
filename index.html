@@ -57,37 +57,32 @@
         pointer-events: none;
       }
 
-      /* HUD */
+      /* HUD - Minimal, Right-Aligned */
       #game-hud {
         position: absolute;
         top: 20px;
         right: 20px;
-        width: 240px;
-        background: rgba(10, 10, 15, 0.75);
-        backdrop-filter: blur(10px);
-        padding: 20px;
-        border-radius: 12px;
+        background: transparent;
+        padding: 15px;
         color: white;
         display: none;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         z-index: 10;
+        text-align: right;
       }
 
       .hud-label {
-        font-size: 0.75rem;
-        color: #8899aa;
-        margin-bottom: 8px;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 5px;
         letter-spacing: 1px;
-        font-weight: 700;
+        font-weight: 400;
       }
       .hud-value {
-        font-size: 1.8rem;
-        font-weight: 900;
+        font-size: 2rem;
+        font-weight: 700;
         color: #fff;
-        letter-spacing: 1px;
+        letter-spacing: 0px;
         font-family: "Inter", sans-serif;
-        text-transform: uppercase;
       }
 
       /* Minimalist HUD */
@@ -729,52 +724,74 @@
 
       /* --- EXTRA SMALL PHONES (< 480px) --- */
       @media (max-width: 480px) {
+        /* Phone Overlay - Smaller */
+        #phone-overlay {
+          width: 150px !important;
+          height: 240px !important;
+          bottom: -20px !important;
+          right: 20px !important;
+        }
+        
+        /* HUD - Smaller */
+        #game-hud {
+          top: 10px !important;
+          right: 10px !important;
+          padding: 10px !important;
+        }
+        .hud-label {
+          font-size: 0.5rem !important;
+        }
+        .hud-value {
+          font-size: 1.5rem !important;
+        }
+        
         /* Narrative Text - Even Smaller for Phones */
         .narrative-text {
-          font-size: 0.7rem !important;
-          line-height: 1.4 !important;
-          padding: 0 15px !important;
+          font-size: 0.65rem !important;
+          line-height: 1.35 !important;
+          padding: 0 12px !important;
         }
         
         /* Case Status UI */
         #case-status-ui .case-status-value {
-          font-size: 1.5rem !important;
+          font-size: 1.3rem !important;
         }
         #case-status-ui .case-status-label {
-          font-size: 0.55rem !important;
+          font-size: 0.5rem !important;
         }
         
         /* Story Form */
         .story-form {
-          padding: 20px !important;
+          padding: 18px !important;
         }
         .story-form h1 {
-          font-size: 1rem !important;
+          font-size: 0.95rem !important;
         }
         .story-form p {
-          font-size: 0.6rem !important;
+          font-size: 0.55rem !important;
+          line-height: 1.3 !important;
         }
         .story-form label {
-          font-size: 0.65rem !important;
+          font-size: 0.6rem !important;
         }
         .story-form textarea {
-          font-size: 0.75rem !important;
-          height: 130px !important;
+          font-size: 0.7rem !important;
+          height: 120px !important;
         }
         .share-btn {
-          font-size: 0.7rem !important;
-          padding: 8px 20px !important;
+          font-size: 0.65rem !important;
+          padding: 7px 18px !important;
         }
         
         /* Loading Screen */
         #intro-disclaimer {
-          font-size: 0.7rem !important;
+          font-size: 0.65rem !important;
         }
         #loading-text {
-          font-size: 1rem !important;
+          font-size: 0.95rem !important;
         }
         #loading-subtext {
-          font-size: 0.55rem !important;
+          font-size: 0.5rem !important;
         }
       }
     </style>
@@ -811,7 +828,6 @@
       </div>
       <div id="action-buttons">
         <button id="sprint-btn" class="mobile-btn">SPRINT</button>
-        <button id="jump-btn" class="mobile-btn">JUMP</button>
       </div>
     </div>
 
@@ -1133,7 +1149,6 @@
 
         const joystickContainer = document.getElementById("joystick-container");
         const joystickInner = document.getElementById("joystick-inner");
-        const jumpBtn = document.getElementById("jump-btn");
         const sprintBtn = document.getElementById("sprint-btn");
 
         let joystickActive = false;
@@ -1163,33 +1178,28 @@
             dx = (dx / distance) * maxDrag;
             dy = (dy / distance) * maxDrag;
           }
-
+          
           joystickInner.style.transform = `translate(${dx}px, ${dy}px)`;
-
-          // Map to movement flags
-          moveForward = dy < -20;
-          moveBackward = dy > 20;
-          moveLeft = dx < -20;
-          moveRight = dx > 20;
+          
+          const angle = Math.atan2(dy, dx);
+          const strength = Math.min(distance / maxDrag, 1);
+          
+          moveForward = Math.cos(angle) < -0.5 && strength > 0.3;
+          moveBackward = Math.cos(angle) > 0.5 && strength > 0.3;
+          moveLeft = Math.sin(angle) < -0.5 && strength > 0.3;
+          moveRight = Math.sin(angle) > 0.5 && strength > 0.3;
         }, { passive: false });
 
         window.addEventListener("touchend", () => {
-          if (!joystickActive) return;
           joystickActive = false;
-          joystickInner.style.transform = `translate(0px, 0px)`;
+          joystickInner.style.transform = "translate(0, 0)";
           moveForward = false;
           moveBackward = false;
           moveLeft = false;
           moveRight = false;
         });
 
-        // Action Buttons
-        jumpBtn.addEventListener("touchstart", (e) => {
-          if (canJump === true) velocity.y += 15;
-          canJump = false;
-          e.preventDefault();
-        }, { passive: false });
-
+        // Sprint Button
         sprintBtn.addEventListener("touchstart", (e) => {
           isSprinting = !isSprinting; // Toggle on mobile
           sprintBtn.classList.toggle("active", isSprinting);
