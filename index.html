@@ -1694,24 +1694,27 @@
                     disclaimer.style.display = 'none';
                     loadingText.style.opacity = '1';
                     
-                    // Show first instruction immediately
-                    subtext.innerText = sequence[0];
+                    // Show first TWO instructions combined
+                    subtext.innerText = sequence[0] + " " + sequence[1];
                     subtext.style.opacity = 1;
                     
-                    // Cycle through remaining instructions based on time
-                    let instructionIndex = 0;
+                    // Cycle through remaining instructions in pairs
+                    let instructionIndex = 2;
                     const instructionInterval = setInterval(() => {
-                        instructionIndex++;
                         if (instructionIndex < sequence.length) {
                             subtext.style.opacity = 0;
                             setTimeout(() => {
-                                subtext.innerText = sequence[instructionIndex];
+                                // Combine two instructions
+                                const text1 = sequence[instructionIndex];
+                                const text2 = sequence[instructionIndex + 1] || "";
+                                subtext.innerText = text2 ? text1 + " " + text2 : text1;
                                 subtext.style.opacity = 1;
                             }, 150);
+                            instructionIndex += 2; // Move by 2
                         } else {
                             clearInterval(instructionInterval);
                         }
-                    }, 1500); // Change instruction every 1.5 seconds
+                    }, 2000); // Show each pair for 2 seconds
                     
                     // Wait for loading to complete if not already
                     const checkComplete = setInterval(() => {
