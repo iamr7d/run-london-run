@@ -711,45 +711,6 @@
         }
       }
 
-      /* --- ROTATION PROMPT FOR MOBILE/TABLET --- */
-      #rotation-prompt {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #000;
-        z-index: 99999;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: #fff;
-        font-family: 'Helvetica Neue', sans-serif;
-      }
-      #rotation-prompt .rotate-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        animation: rotateAnim 2s infinite ease-in-out;
-      }
-      #rotation-prompt p {
-        font-size: 1rem;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: #888;
-      }
-      @keyframes rotateAnim {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(90deg); }
-      }
-      
-      
-      /* Show rotation prompt only on mobile/tablet in portrait AND during gameplay */
-      @media (max-width: 1024px) and (orientation: portrait) {
-        body.game-active #rotation-prompt {
-          display: flex !important;
-        }
-      }
 
       /* --- EXTRA SMALL PHONES (< 480px) --- */
       @media (max-width: 480px) {
@@ -859,11 +820,6 @@
     </style>
   </head>
   <body>
-    <!-- Rotation Prompt -->
-    <div id="rotation-prompt">
-      <div class="rotate-icon">📱</div>
-      <p>Please rotate your device</p>
-    </div>
     <!-- Start Screen -->
     <div id="ui-layer">
       <!-- Simple Percent Loader -->
