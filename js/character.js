@@ -218,7 +218,7 @@ export class Character {
         // 8. Visuals & Interaction
         this.updateRotation(dt);
         this.checkCollectibles(collectibles);
-        this.animateLimbs(Date.now() * 0.005); // Pass slower time
+        this.animateLimbs(Date.now() * 0.005, dt); // Pass slower time and dt
         this.updateCamera(dt);
     }
 
@@ -307,12 +307,12 @@ export class Character {
             while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
             while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-            this.mesh.rotation.y += rotDiff * 10.0 * dt;
+            this.mesh.rotation.y += rotDiff * (1 - Math.exp(-10.0 * dt));
         }
         
         // BANKING: Tilt body into turn
         const turnTilt = -this.inputVector.x * 0.2; 
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, turnTilt, dt * 5);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, turnTilt, 1 - Math.exp(-5 * dt));
     }
 
     checkCollectibles(collectibles) {
@@ -328,7 +328,7 @@ export class Character {
         }
     }
 
-    animateLimbs(time) {
+    animateLimbs(time, dt) {
         const speed = new THREE.Vector2(this.velocity.x, this.velocity.z).length();
         const runFactor = Math.min(speed / this.runSpeed, 1.5);
         
@@ -341,7 +341,7 @@ export class Character {
             this.rArm.rotation.x = angle;
             
             // Bobbing
-            this.mesh.position.y += Math.sin(time * 40 * runFactor) * 0.02;
+            this.mesh.position.y += Math.sin(time * 40 * runFactor) * 0.02 * 60 * dt;
         } else if (!this.onGround) {
             // Jumping Pose
             this.lLeg.rotation.x = THREE.MathUtils.lerp(this.lLeg.rotation.x, 0.5, 0.2);
@@ -372,7 +372,7 @@ export class Character {
         const targetPos = this.mesh.position.clone().add(offset);
         
         // Lerp camera position for "weight"
-        this.camera.position.lerp(targetPos, dt * 5.0);
+        this.camera.position.lerp(targetPos, 1 - Math.exp(-5.0 * dt));
         
         // Look ahead
         const lookTarget = this.mesh.position.clone();

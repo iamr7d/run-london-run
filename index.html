@@ -4024,11 +4024,11 @@
       function animatePetals() {
         if (!petalIM) return;
         petals.forEach((p, i) => {
-          p.pos.y -= p.speed * 0.1;
-          p.pos.x += Math.sin(Date.now() * 0.001 + p.pos.y) * p.sway;
-          p.pos.z += Math.cos(Date.now() * 0.0005 + p.pos.y) * p.sway;
-          p.rot.y += 0.02;
-          p.rot.z += 0.02;
+          p.pos.y -= p.speed * 6 * delta; // Adjusted from 0.1 for 60fps
+          p.pos.x += Math.sin(Date.now() * 0.001 + p.pos.y) * p.sway * 60 * delta;
+          p.pos.z += Math.cos(Date.now() * 0.0005 + p.pos.y) * p.sway * 60 * delta;
+          p.rot.y += 1.2 * delta; // Adjusted from 0.02 for 60fps
+          p.rot.z += 1.2 * delta;
 
           if (p.pos.y < -1) {
             resetPetalData(p);
@@ -4068,10 +4068,13 @@
         if (controls.isLocked || isMobile) {
           // Stamina Logic
           const isMoving = moveForward || moveBackward || moveLeft || moveRight;
-          let actualSpeed = 80.0; // Base walk speed
+          // Smoothly transition between walk and sprint speeds
+          const baseSpeed = 80.0;
+          const sprintSpeed = 260.0; // Restored and slightly tuned
+          let targetMaxSpeed = baseSpeed;
 
           if (isSprinting && stamina > 0 && isMoving) {
-            actualSpeed = 160.0; // Reduced from 280.0 for better control
+            targetMaxSpeed = sprintSpeed;
             stamina -= sprintCost * delta;
             if (stamina < 0) stamina = 0;
           } else {
@@ -4079,6 +4082,11 @@
               stamina += regenRate * delta;
             }
           }
+          
+          // Smooth the speed transition (Universal Smoothness)
+          if (!window.lerpedPlayerSpeed) window.lerpedPlayerSpeed = baseSpeed;
+          window.lerpedPlayerSpeed = THREE.MathUtils.lerp(window.lerpedPlayerSpeed, targetMaxSpeed, 1 - Math.exp(-5 * delta));
+          let actualSpeed = window.lerpedPlayerSpeed;
 
           // Update Stamina UI (Removed as HUD element is gone)
           /* 
@@ -4090,10 +4098,11 @@
               "linear-gradient(90deg, #00ff88, #00ccff)";
           */
 
-          // Physics
-          velocity.x -= velocity.x * 10.0 * delta;
-          velocity.z -= velocity.z * 10.0 * delta;
-          velocity.y -= 9.8 * 10.0 * delta;
+          // Physics - Continuous Damping (Universal Smoothness)
+          const dampingFactor = 1 - Math.exp(-10.0 * delta);
+          velocity.x -= velocity.x * dampingFactor;
+          velocity.z -= velocity.z * dampingFactor;
+          velocity.y -= 9.8 * 10.0 * delta; // Gravity remains linear for precision
 
           direction.z = Number(moveForward) - Number(moveBackward);
           direction.x = Number(moveRight) - Number(moveLeft);
@@ -4115,10 +4124,23 @@
             if (camera.position.x < -limitX) camera.position.x = -limitX;
           }
 
-          if (camera.position.y < 1.6) {
-            velocity.y = 0;
-            camera.position.y = 1.6;
-            canJump = true;
+          if (camera.position.y < 1.7) { 
+             // Base height
+             let baseHeight = 1.6;
+             
+             // Head Bob (Universal Smoothness)
+             const speed = new THREE.Vector2(velocity.x, velocity.z).length();
+             if (speed > 0.1 && canJump) {
+                 const bobSpeed = isSprinting ? 12 : 8;
+                 const bobAmount = isSprinting ? 0.08 : 0.04;
+                 baseHeight += Math.sin(time * 0.001 * bobSpeed) * bobAmount;
+             }
+             
+             if (camera.position.y < baseHeight + 0.05) {
+                velocity.y = 0;
+                camera.position.y = THREE.MathUtils.lerp(camera.position.y, baseHeight, 1 - Math.exp(-10 * delta));
+                canJump = true;
+             }
           }
 
           // --- FOOTSTEP AUDIO ---
@@ -4193,32 +4215,38 @@
               alert.style.color = "#ff3333";
             }
 
-            // CHASE AI
+            // CHASE AI - Smoothed Transitions
+            let targetSnatchSpeed = 22; // Default cruising
+
             if (dist < 15) {
-              // PANIC: Player is too close! Sprint! (Speed reduced to be slower than player sprint)
-              snatcherSpeed = 26;
+              // PANIC: Player is too close! Sprint!
+              targetSnatchSpeed = 25;
             } else if (dist > 60) {
-              // RELAX: Player is far behind, slow down to taunt/rest
-              if (snatcherSpeed > 15) snatcherSpeed -= 10 * delta;
+              // RELAX: Player is far behind
+              targetSnatchSpeed = 15;
             } else {
-              // CRUISING: Gradually accelerate up to a max cruising speed (reduced)
-              if (snatcherSpeed < 24) {
-                snatcherSpeed += 2.0 * delta;
-              }
+              // CRUISING
+              targetSnatchSpeed = 23;
             }
+            
+            // Lerp the snatcher speed for smoothness
+            snatcherSpeed = THREE.MathUtils.lerp(snatcherSpeed, targetSnatchSpeed, 1 - Math.exp(-2 * delta));
           }
         }
 
         // Environment Animation
         animatePetals();
         if (waterMesh && waterMesh.material.uniforms) {
-          waterMesh.material.uniforms["time"].value += 1.0 / 60.0;
+          waterMesh.material.uniforms["time"].value += delta;
         }
 
         people.forEach((p) => {
           // Move Forward
-          p.group.position.z += p.speed * p.dir;
-          p.group.rotation.y = p.dir > 0 ? 0 : Math.PI;
+          p.group.position.z += p.speed * p.dir * 60 * delta;
+          
+          // Smooth Rotation Flip
+          const targetRot = p.dir > 0 ? 0 : Math.PI;
+          p.group.rotation.y = THREE.MathUtils.lerp(p.group.rotation.y, targetRot, 1 - Math.exp(-5 * delta));
 
           // Bound Check
           if (p.group.position.z > 400) p.dir = -1;
@@ -4245,7 +4273,7 @@
         // Animate Buses (New System)
         if (busMeshes && busMeshes.length > 0) {
           busMeshes.forEach((bus) => {
-            bus.position.z += bus.userData.speed;
+            bus.position.z += bus.userData.speed * 60 * delta; // Added delta
             // Wrap around logic
             if (bus.position.z > 1200) bus.position.z = -1200;
             if (bus.position.z < -1200) bus.position.z = 1200;
@@ -4271,7 +4299,7 @@
 
         // Landmark Animations
         if (wheelGroup) {
-          wheelGroup.rotation.z -= 0.0005; // Slow rotation
+          wheelGroup.rotation.z -= 0.03 * delta; // Adjusted for delta (was ~0.0005 per frame at 60fps)
           capsules.forEach((cap) => {
             // Counter-rotate capsules to keep them upright
             cap.mesh.rotation.z = -wheelGroup.rotation.z - cap.angle;

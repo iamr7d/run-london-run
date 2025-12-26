@@ -1,0 +1,13 @@
+{
+  "name": "run-london-run",
+  "version": "1.0.0",
+  "description": "A Spider-Verse inspired London chase game.",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve .",
+    "dev": "serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
