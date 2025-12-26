@@ -1691,16 +1691,14 @@
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         async function runLoadingSequence() {
-            // Step 1: Show Disclaimer (4s)
-            // Wait a tiny bit for initial render
-            await sleep(100); 
+            // Step 1: Show Disclaimer (Reduced to 1s)
+            await sleep(50); 
             disclaimer.style.opacity = '1';
-            await sleep(2000);
-
+            await sleep(1000); 
 
             // Step 2: Fade Out Disclaimer
             disclaimer.style.opacity = '0';
-            await sleep(400);
+            await sleep(200);
             disclaimer.style.display = 'none';
 
             // Step 3: Start Loader
@@ -1735,15 +1733,15 @@
                         clearInterval(interval);
                         resolve(); // Finish step 4
                     }
-                }, 15);
+                }, 4); // Fastened from 15ms to 4ms for snappier loading
 
             });
 
             // Step 5: Finish
-            await sleep(400); // Hold at 100%
+            await sleep(100); // reduced from 400
 
             loader.style.opacity = '0';
-            await sleep(500); // Fade out loader
+            await sleep(100); // reduced from 500
             
             loader.style.display = 'none';
             loader.classList.add('hidden');
@@ -2261,63 +2259,42 @@
         return tex;
       }
 
-      // HELPER: Cherry Blossom Tree (Spring)
+      // HELPER: Cherry Blossom Tree (Spring) - Optimized with Caching
+      let cachedCherryTrunkGeo, cachedCherryTrunkMat, cachedCherryLeavesMat;
       function createCherryBlossomTree(x, z) {
+        if (!cachedCherryTrunkGeo) cachedCherryTrunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 3, 7);
+        if (!cachedCherryTrunkMat) cachedCherryTrunkMat = new THREE.MeshStandardMaterial({ color: 0x3d2817 });
+        if (!cachedCherryLeavesMat) cachedCherryLeavesMat = new THREE.PointsMaterial({ size: 0.3, vertexColors: true });
+
         const group = new THREE.Group();
         group.position.set(x, 0, z);
 
-        // Trunk
-        const trunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 3, 7);
-        const trunkMat = new THREE.MeshStandardMaterial({
-          color: 0x3d2817,
-          roughness: 1.0,
-        });
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        const trunk = new THREE.Mesh(cachedCherryTrunkGeo, cachedCherryTrunkMat);
         trunk.position.y = 1.5;
         trunk.castShadow = true;
         group.add(trunk);
 
-        // Foliage - Pink Particles
+        // Foliage - Reuse points but randomize slight rotation for variety
+        const leafCount = 150; 
         const leavesGeo = new THREE.BufferGeometry();
-        const leafCount = 200; // Reduced from 800 for performance
         const positions = [];
         const colors = [];
-        const color1 = new THREE.Color(0xffb7c5); // Light Pink
-        const color2 = new THREE.Color(0xff69b4); // Deep Pink
+        const color1 = new THREE.Color(0xffb7c5);
+        const color2 = new THREE.Color(0xff69b4);
 
         for (let i = 0; i < leafCount; i++) {
-          // Cloud shape around top
           const r = Math.random() * 2.5;
           const theta = Math.random() * Math.PI * 2;
           const phi = Math.random() * Math.PI;
-
-          const lx = r * Math.sin(phi) * Math.cos(theta);
-          const ly = r * Math.sin(phi) * Math.sin(theta) + 3.5; // Raised center
-          const lz = r * Math.cos(phi);
-
-          positions.push(lx, ly, lz);
-
-          const mix = Math.random();
-          const col = color1.clone().lerp(color2, mix);
+          positions.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta) + 3.5, r * Math.cos(phi));
+          const col = color1.clone().lerp(color2, Math.random());
           colors.push(col.r, col.g, col.b);
         }
+        leavesGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        leavesGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
-        leavesGeo.setAttribute(
-          "position",
-          new THREE.Float32BufferAttribute(positions, 3)
-        );
-        leavesGeo.setAttribute(
-          "color",
-          new THREE.Float32BufferAttribute(colors, 3)
-        );
-
-        const leavesMat = new THREE.PointsMaterial({
-          size: 0.3,
-          vertexColors: true,
-        });
-        const leaves = new THREE.Points(leavesGeo, leavesMat);
+        const leaves = new THREE.Points(leavesGeo, cachedCherryLeavesMat);
         group.add(leaves);
-
         scene.add(group);
       }
 
@@ -3491,20 +3468,20 @@
         }
       }
 
+      let cachedTrunkGeo, cachedTrunkMat, cachedLeafMat, cachedLeafGeo;
       function createRealisticTree(x, z) {
+        if (!cachedTrunkGeo) cachedTrunkGeo = new THREE.CylinderGeometry(0.15, 0.25, 2.5, 6);
+        if (!cachedTrunkMat) cachedTrunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3c31 });
+        if (!cachedLeafMat) cachedLeafMat = new THREE.MeshStandardMaterial({ color: 0xffafcc, flatShading: true, roughness: 1 });
+        if (!cachedLeafGeo) cachedLeafGeo = new THREE.DodecahedronGeometry(1); // One base size, we scale
+
         const group = new THREE.Group();
         group.position.set(x, 0.4, z);
-        const trunkGeo = new THREE.CylinderGeometry(0.15, 0.25, 2.5, 6);
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3c31 });
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        const trunk = new THREE.Mesh(cachedTrunkGeo, cachedTrunkMat);
         trunk.position.y = 1.25;
         trunk.castShadow = true;
         group.add(trunk);
-        const leafMat = new THREE.MeshStandardMaterial({
-          color: 0xffafcc,
-          flatShading: true,
-          roughness: 1,
-        });
+
         const leafPositions = [
           { x: 0, y: 3, z: 0, s: 1.5 },
           { x: 0.8, y: 2.5, z: 0.5, s: 1.0 },
@@ -3513,10 +3490,10 @@
           { x: -0.5, y: 2.8, z: 0.8, s: 1.0 },
         ];
         leafPositions.forEach((pos) => {
-          const geo = new THREE.DodecahedronGeometry(pos.s);
-          const mesh = new THREE.Mesh(geo, leafMat);
+          const mesh = new THREE.Mesh(cachedLeafGeo, cachedLeafMat);
           mesh.position.set(pos.x, pos.y, pos.z);
-          mesh.castShadow = false; // OPTIMIZATION: Leaves don't cast shadows
+          mesh.scale.setScalar(pos.s);
+          mesh.castShadow = false;
           group.add(mesh);
         });
         scene.add(group);
