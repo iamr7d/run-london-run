@@ -67,7 +67,7 @@ Built with **Vanilla JavaScript** and **Three.js**, prioritizing performance and
 1.  **Clone the Repository**
 
     ```bash
-    git clone https://github.com/rahulrajpvual/RLR.git
+    git clone https://github.com/iamr7d/run-london-run.git
     cd RLR
     ```
 
